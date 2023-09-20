@@ -1,0 +1,49 @@
+html, body {
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+}
+
+.center {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.container {
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.top {
+  width:100%;
+  height:100%;
+  flex-direction:row;
+  min-height:0;
+  flex:1;
+}
+
+.top-item {
+  width:100%;
+  height:100%;
+  flex:1;
+  overflow:hidden;
+}
+.left {
+  background-color: #ff000022;
+  
+}
+.right {
+  font-size:50px;
+  background-color: #0000ff22;
+}
+.bottom {
+  background-color: #00ff0022;
+  width:100%;
+  height:30%;
+}

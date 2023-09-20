@@ -1,0 +1,30 @@
+{
+  "name": "my-sdk",
+  "version": "0.1.0",
+  "description": "My SDK for 3rd parties",
+  "main": "build/my-sdk.latest.min.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:dev\" \"npm run --silent dev:serve\"",
+    "build": "npm run build:get-version && npm run build:build && npm run build:copy && npm run build:clean",
+    "dev:serve": "serve -l 8040 public",
+    "build:get-version": "node -e 'const MHP_VERSION = require(\"./scripts/VERSION.js\"); process.stdout.write(MHP_VERSION)' > .version",
+    "dev:dev": "esbuild scripts/mhp.ts --bundle --sourcemap --target=es6 --outfile=public/mhp.js --watch",
+    "build:build": "esbuild scripts/mhp.ts --bundle --minify --target=es6 --outfile=build/mhp.$(cat .version).js",
+    "build:copy": "cp -f build/mhp.$(cat .version).js build/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.$(cat .version).js",
+    "build:clean": "rm .version"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "concurrently": "^8.2.1",
+    "esbuild": "^0.19.3",
+    "serve": "^14.2.1",
+    "typescript": "^5.2.2"
+  }
+}
