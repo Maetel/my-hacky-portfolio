@@ -10,7 +10,7 @@
     "build:get-version": "node -e 'const MHP_VERSION = require(\"./src/VERSION.js\"); process.stdout.write(MHP_VERSION)' > .version",
     "dev:dev": "esbuild src/mhp.ts --bundle --sourcemap --target=es6 --outfile=public/mhp.js --watch",
     "build:build": "esbuild src/mhp.ts --bundle --minify --target=es6 --outfile=build/mhp.$(cat .version).js",
-    "build:copy": "cp -f build/mhp.$(cat .version).js build/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.$(cat .version).js",
+    "build:copy": "cp -f build/mhp.$(cat .version).js build/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.js && cp -f build/mhp.$(cat .version).js public/mhp.$(cat .version).js",
     "build:clean": "rm .version"
   },
   "devDependencies": {

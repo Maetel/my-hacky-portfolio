@@ -1,6 +1,7 @@
 # My Hacky Portfolio
 
 * 100% native canvas API used
+* CSS-like Widget system
 * Built with typescript & esbuild
 
 > Up and running [here (https://my-hacky-portfolio.vercel.app/)](https://my-hacky-portfolio.vercel.app/)
