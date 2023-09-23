@@ -66,6 +66,8 @@ window.onload = () => {
   window.onkeydown = (event) => theCanvas.onKeyDown(event);
   window.onkeyup = (event) => theCanvas.onKeyUp(event);
 
+  initWidgets();
+
   theCanvas.run();
 };
 
@@ -79,45 +81,8 @@ class MHPCanvas extends BasicCanvas {
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     super(canvas, width, height);
-
-    this.initAreas();
-
     if (isMobile) {
     }
-  }
-
-  initAreas() {
-    const first = new StatelessWidget("first", null, {
-      size: {
-        top: new Length(0.25),
-        left: new Length(0.25),
-        width: new Length(0.5),
-        height: new Length(0.5),
-      },
-      backgroundColor: "#ff0000",
-      borderRadius: 30,
-      grabbable: true,
-      hover: {
-        borderColor: "#0000ff",
-        borderWidth: 2,
-        cursor: "pointer",
-      },
-      mouseDown: {
-        cursor: "grabbing",
-      },
-    });
-    const second = new StatelessWidget("second", first, {
-      size: {
-        left: new Length(0.5),
-        top: new Length(0.5),
-        width: new Length("300px"),
-        height: new Length(0.49),
-      },
-      backgroundColor: "#00ff00",
-      // backgroundColor: "transparent",
-      opacity: 0.5,
-    });
-    WidgetManager.push(first, second);
   }
 
   // @override
@@ -132,7 +97,7 @@ class MHPCanvas extends BasicCanvas {
 
   pointerMoveOn: StatelessWidget | null = null;
   pointerDownOn: StatelessWidget | null = null;
-  pointerUpOn: StatelessWidget | null = null;
+  // pointerUpOn: StatelessWidget | null = null;
 
   // @override
   onPointerMove(e: MouseEvent) {
@@ -167,8 +132,8 @@ class MHPCanvas extends BasicCanvas {
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
     this.pointerDownOn = null;
-    this.pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
-    this.handlePointerUp();
+    const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
+    this.handlePointerUp(pointerUpOn);
   }
 
   // @override
@@ -217,7 +182,7 @@ class MHPCanvas extends BasicCanvas {
 
   handlePointerDown() {}
 
-  handlePointerUp() {}
+  handlePointerUp(widget: StatelessWidget) {}
 
   ////////////////////////////////////////////////////////
   // render
@@ -235,27 +200,19 @@ class MHPCanvas extends BasicCanvas {
       const { left, top, width, height, bottom } = widget.xywh;
       const hovered = this.pointerMoveOn?.id === widget.id;
       const pointerDown = this.pointerDownOn?.id === widget.id;
-      const pointerUp = this.pointerUpOn?.id === widget.id;
+      // const pointerUp = this.pointerUpOn?.id === widget.id;
       // console.log({ hovered,  });
-      const style =
-        hovered && widget.style.hover ? widget.style.hover : widget.style;
+
+      let style = { ...widget.style };
+      if (pointerDown && widget.style.mouseDown) {
+        style = { ...style, ...widget.style.mouseDown };
+      } else if (hovered && widget.style.hover) {
+        style = { ...style, ...widget.style.hover };
+      }
+
       // console.log({ style });
       if (width === 0 || height === 0) return;
       const { left: lr, top: tr, width: wr, height: hr } = widget.xywhRatio;
-      // console.log({ xywh: widget.xywh });
-      const dst = `${bottom - 0.5}px`;
-      if (widget.id === "first") {
-        const dxdy = this.dt * 0.01;
-        // widget.move(dxdy, dxdy);
-        widget.moveX(dxdy);
-      }
-
-      // const gradient = this.ctx.createLinearGradient(0, 0, 200, 0);
-
-      // // Add color stops to the gradient
-      // gradient.addColorStop(0, "red"); // Start with red at 0%
-      // gradient.addColorStop(0.5, "green"); // Transition to green at 50%
-      // gradient.addColorStop(1, "blue");
 
       const backgroundColor = background(style.backgroundColor, style.opacity);
       // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
@@ -326,4 +283,41 @@ class MHPCanvas extends BasicCanvas {
 
     this.currentAnimation = requestAnimationFrame(this._run.bind(this));
   }
+}
+
+function initWidgets() {
+  const first = new StatelessWidget("first", null, {
+    size: {
+      top: new Length(0.25),
+      left: new Length(0.25),
+      width: new Length(0.5),
+      height: new Length(0.5),
+    },
+    backgroundColor: "#ff0000",
+    borderRadius: 30,
+    grabbable: true,
+    hover: {
+      borderColor: "#0000ff",
+      borderWidth: 2,
+      cursor: "pointer",
+    },
+    mouseDown: {
+      backgroundColor: "#dd0000",
+      borderColor: "#00ff00",
+      borderWidth: 3,
+      cursor: "grabbing",
+    },
+  });
+  const second = new StatelessWidget("second", first, {
+    size: {
+      left: new Length(0.5),
+      top: new Length(0.5),
+      width: new Length("300px"),
+      height: new Length(0.49),
+    },
+    backgroundColor: "#00ff00",
+    // backgroundColor: "transparent",
+    opacity: 0.5,
+  });
+  WidgetManager.push(first, second);
 }
