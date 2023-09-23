@@ -96,10 +96,14 @@ class MHPCanvas extends BasicCanvas {
       },
       backgroundColor: "#ff0000",
       borderRadius: 30,
-      cursor: "pointer",
+      grabbable: true,
       hover: {
         borderColor: "#0000ff",
         borderWidth: 2,
+        cursor: "pointer",
+      },
+      mouseDown: {
+        cursor: "grabbing",
       },
     });
     const second = new StatelessWidget("second", first, {
@@ -111,7 +115,7 @@ class MHPCanvas extends BasicCanvas {
       },
       backgroundColor: "#00ff00",
       // backgroundColor: "transparent",
-      // opacity: 0.5,
+      opacity: 0.5,
     });
     WidgetManager.push(first, second);
   }
@@ -126,16 +130,23 @@ class MHPCanvas extends BasicCanvas {
     // this.run();
   }
 
-  mouseMoveOn: StatelessWidget | null = null;
+  pointerMoveOn: StatelessWidget | null = null;
+  pointerDownOn: StatelessWidget | null = null;
+  pointerUpOn: StatelessWidget | null = null;
 
   // @override
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
 
-    this.mouseMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
+    this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
 
     //find in reverse order
-    this.canvas.style.cursor = this.mouseMoveOn?.style?.cursor ?? "default";
+    if (this.isDragging) {
+      this.handleDrag();
+    } else {
+      this.canvas.style.cursor =
+        this.pointerMoveOn?.style?.hover?.cursor ?? "default";
+    }
   }
   // input event overrides
 
@@ -145,12 +156,19 @@ class MHPCanvas extends BasicCanvas {
   // @override
   onPointerDown(e: MouseEvent) {
     super.onPointerDown(e);
-    this.handleClick();
+    this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
+    // console.log({ down: this.pointerDownOn?.style?.cursor });
+    this.canvas.style.cursor =
+      this.pointerDownOn?.style?.mouseDown?.cursor ?? "default";
+    this.handlePointerDown();
   }
 
   // @override
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
+    this.pointerDownOn = null;
+    this.pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
+    this.handlePointerUp();
   }
 
   // @override
@@ -169,20 +187,40 @@ class MHPCanvas extends BasicCanvas {
   }
 
   handleDrag() {
-    if (!this.isDragging) {
+    if (!this.isDragging || this.pointerDownOn === null) {
       return;
     }
-    const { mouseMoveX, mouseMoveY, mouseDownX, mouseDownY } = this;
+    const {
+      mouseMoveX,
+      mouseMoveY,
+      mouseMovePrevX,
+      mouseMovePrevY,
+      mouseDownX,
+      mouseDownY,
+      dx,
+      dy,
+    } = this;
+
+    if (this.pointerDownOn.style?.grabbable) {
+      this.pointerDownOn.move(dx, dy);
+    }
   }
 
   ////////////////////////////////////////////////////////
   // handle events
 
   handleClick() {
-    if (this.mouseMoveOn) {
-      console.log(this.mouseMoveOn);
+    if (this.pointerMoveOn) {
+      console.log(this.pointerMoveOn);
     }
   }
+
+  handlePointerDown() {}
+
+  handlePointerUp() {}
+
+  ////////////////////////////////////////////////////////
+  // render
 
   dt: number;
   lastTimestamp: number;
@@ -195,8 +233,9 @@ class MHPCanvas extends BasicCanvas {
     WidgetManager.list().forEach((widget) => {
       if (!widget.style.visible) return;
       const { left, top, width, height, bottom } = widget.xywh;
-      const hovered = this.mouseMoveOn?.id === widget.id;
-      // const clicked = this.mouseMoveOn?.id === widget.id;
+      const hovered = this.pointerMoveOn?.id === widget.id;
+      const pointerDown = this.pointerDownOn?.id === widget.id;
+      const pointerUp = this.pointerUpOn?.id === widget.id;
       // console.log({ hovered,  });
       const style =
         hovered && widget.style.hover ? widget.style.hover : widget.style;
@@ -207,7 +246,8 @@ class MHPCanvas extends BasicCanvas {
       const dst = `${bottom - 0.5}px`;
       if (widget.id === "first") {
         const dxdy = this.dt * 0.01;
-        widget.move(dxdy, dxdy);
+        // widget.move(dxdy, dxdy);
+        widget.moveX(dxdy);
       }
 
       // const gradient = this.ctx.createLinearGradient(0, 0, 200, 0);

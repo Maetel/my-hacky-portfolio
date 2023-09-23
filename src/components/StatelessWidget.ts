@@ -43,10 +43,33 @@ export default class StatelessWidget extends Area {
     const inputArea = style?.size ?? defaultArea();
     const { innerWidth, innerHeight } = window;
     const hover = style?.hover
-      ? { ...style, ...{ ...style.hover }, hover: null }
+      ? {
+          ...style,
+          ...style.hover,
+          hover: null,
+          mouseDown: null,
+          mouseUp: null,
+        }
       : null;
-    console.log({ hoverStyle: hover });
-    const updatedStyle = style ? { ...style, hover } : {};
+    const mouseDown = style?.mouseDown
+      ? {
+          ...style,
+          ...style.mouseDown,
+          hover: null,
+          mouseDown: null,
+          mouseUp: null,
+        }
+      : null;
+    const mouseUp = style?.mouseUp
+      ? {
+          ...style,
+          ...style.mouseUp,
+          hover: null,
+          mouseDown: null,
+          mouseUp: null,
+        }
+      : null;
+    const updatedStyle = style ? { ...style, hover, mouseDown, mouseUp } : {};
     super(innerWidth, innerHeight, inputArea);
     this.id = id;
     this.parent = parent;
@@ -54,6 +77,7 @@ export default class StatelessWidget extends Area {
       ...DefaultStatelessWidgetStyle,
       ...updatedStyle,
     };
+    console.log({ updatedStyle });
     WidgetManager.push(this);
   }
 }

@@ -9,6 +9,7 @@ export default interface WidgetStyle {
   borderColor?: string | CanvasGradient | CanvasPattern;
   visible?: boolean;
   zIndex?: number;
+  grabbable?: boolean;
 
   // TODOS
   opacity?: number;
@@ -33,6 +34,8 @@ export default interface WidgetStyle {
   padding?: string;
   margin?: string;
   hover?: WidgetStyle;
+  mouseDown?: WidgetStyle;
+  mouseUp?: WidgetStyle;
 }
 
 export const background = (
