@@ -169,7 +169,6 @@ class MHPCanvas extends BasicCanvas {
     } = this;
 
     if (this.pointerDownOn.style?.grabbable) {
-      console.log({ dx, dy });
       this.pointerDownOn.move(dx, dy);
     }
   }
@@ -282,9 +281,39 @@ class MHPCanvas extends BasicCanvas {
       this.render();
     }
 
+    if (true) {
+      this.renderFPS();
+    }
+
     //!content
 
     this.currentAnimation = requestAnimationFrame(this._run.bind(this));
+  }
+
+  renderFPS() {
+    const fps = myround(1000 / this.dt, 0);
+    const { clientWidth, clientHeight } = document.documentElement;
+    const text = `${fps}fps`;
+    const fontSize = 20;
+    const font = `${fontSize}px sans-serif`;
+    const textWidth = this.ctx.measureText(text).width;
+    const textHeight = fontSize;
+    const padding = 10;
+    const x = 0;
+    const y = 0;
+    const prev = {
+      fillStyle: this.ctx.fillStyle,
+      font: this.ctx.font,
+    };
+    this.ctx.fillStyle = "rgba(0,0,0,1.0)";
+    this.ctx.fillRect(x, y, textWidth + padding, textHeight + padding);
+    this.ctx.fillStyle = "#aaa";
+    this.ctx.font = font;
+    this.ctx.fillText(text, x + padding / 2, y + padding / 2 + textHeight);
+
+    //restore
+    this.ctx.fillStyle = prev.fillStyle;
+    this.ctx.font = prev.font;
   }
 }
 
