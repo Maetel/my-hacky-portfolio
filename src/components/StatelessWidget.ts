@@ -85,8 +85,8 @@ export default class StatelessWidget extends Area {
     this._style = { ...style };
     this.left = style.size.left.length;
     this.top = style.size.top.length;
-    this.width = style.size.width.length;
-    this.height = style.size.height.length;
+    this.setWidth(style.size.width.length);
+    this.setHeight(style.size.height.length);
     // this.right = style.size.right.length;
     // this.bottom = style.size.bottom.length;
   }

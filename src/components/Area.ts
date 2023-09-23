@@ -280,19 +280,33 @@ export class Area {
   }
 
   set left(left: number | string) {
-    this.setStyle({ left: new Length(left) });
+    this.setStyle({ left: new Length(left), width: new Length() });
   }
 
   set right(right: number | string) {
-    this.setStyle({ right: new Length(right) });
+    this.setStyle({ right: new Length(right), width: new Length() });
   }
 
-  set width(width: number | string) {
-    this.setStyle({ width: new Length(width) });
+  setWidth(width: number | string, align: "left" | "right" = "left") {
+    switch (align) {
+      case "left":
+        this.setStyle({ width: new Length(width), right: new Length() });
+        break;
+      case "right":
+        this.setStyle({ width: new Length(width), left: new Length() });
+        break;
+    }
   }
 
-  set height(height: number | string) {
-    this.setStyle({ height: new Length(height) });
+  setHeight(height: number | string, align: "top" | "bottom" = "top") {
+    switch (align) {
+      case "top":
+        this.setStyle({ height: new Length(height), bottom: new Length() });
+        break;
+      case "bottom":
+        this.setStyle({ height: new Length(height), top: new Length() });
+        break;
+    }
   }
 
   contains = (x: number, y: number) => this.isInArea(x, y);

@@ -15,6 +15,7 @@ import {
   myround,
   simpleHash,
   strPercentToFloat,
+  toPx,
   uuid,
 } from "./utils";
 import * as C from "./constants";
@@ -37,6 +38,7 @@ import StatefulWidget, {
   setState,
 } from "./components/StatefulWidget";
 import error from "./class/IError";
+import Store from "./class/Store";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -184,6 +186,61 @@ class MHPCanvas extends BasicCanvas {
         });
       } else {
         console.log("already running : ", animId);
+      }
+    }
+
+    if (clicked.id === "third") {
+      const stful = asStateful(clicked);
+      const orgLeft = stful.left as number;
+      const orgWidth = stful.width as number;
+      const orgRight = stful.right as number;
+
+      const jobId = "untiljob";
+      const jobTypeId = "untiljobType";
+      if (!Store.has(jobId)) {
+        Store.set(jobId, true);
+        Store.upsert(jobTypeId, (prev) => {
+          if (!prev) {
+            return "expand";
+          }
+          return prev === "expand" ? "swing" : "expand";
+        });
+
+        const duration_ms = 2000;
+        const onEveryFrame = (elapsed) => {
+          const untilAnimation: "expand" | "swing" = Store.get(jobTypeId);
+
+          const dx = Math.sin(elapsed / 100) * 100;
+          switch (untilAnimation) {
+            case "expand":
+              stful.left = toPx(orgLeft - dx);
+              stful.setWidth(toPx(orgWidth + 2 * dx));
+              break;
+            case "swing":
+              stful.left = toPx(orgLeft + dx);
+              stful.right = toPx(orgRight + dx);
+              break;
+          }
+
+          this.redraw();
+        };
+        const onUntiljobFinish = (elapsed) => {
+          console.log("until onFinish, Elapsed : ", elapsed);
+          stful.left = toPx(orgLeft);
+          stful.setWidth(toPx(orgWidth));
+          switch (Store.get(jobTypeId)) {
+            case "expand":
+              stful.style.backgroundColor = "#a9039c";
+              break;
+            case "swing":
+              stful.style.backgroundColor = "#39ca90";
+              break;
+          }
+          this.redraw();
+          Store.delete(jobId);
+        };
+
+        this.until(duration_ms, onEveryFrame, onUntiljobFinish);
       }
     }
   }
@@ -476,7 +533,17 @@ function initWidgets() {
     // backgroundColor: "transparent",
     opacity: 0.5,
   });
+  const third = new StatefulWidget("third", second, {
+    size: {
+      left: new Length(0.1),
+      top: new Length(0.1),
+      width: new Length(0.4),
+      height: new Length(0.28),
+    },
+    backgroundColor: "#0000ff",
+    opacity: 0.7,
+  });
   // WidgetManager.push(background, first, second);
-  WidgetManager.push(first, second);
-  // console.log(widgets);
+  WidgetManager.push(first, second, third);
+  console.log("Widgets : ", widgets);
 }
