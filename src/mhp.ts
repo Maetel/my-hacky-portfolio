@@ -292,23 +292,24 @@ class MHPCanvas extends BasicCanvas {
 
   renderFPS() {
     const fps = myround(1000 / this.dt, 0);
-    const { clientWidth, clientHeight } = document.documentElement;
-    const text = `${fps}fps`;
-    const fontSize = 20;
-    const font = `${fontSize}px sans-serif`;
-    const textWidth = this.ctx.measureText(text).width;
-    const textHeight = fontSize;
-    const padding = 10;
-    const x = 0;
-    const y = 0;
     const prev = {
       fillStyle: this.ctx.fillStyle,
       font: this.ctx.font,
     };
+
+    const padding = 6;
+    const x = 0;
+    const y = 0;
+    const text = `${fps}fps`;
+    const fontSize = 20;
+    const font = `${fontSize}px sans-serif`;
+
+    this.ctx.font = font;
+    const textWidth = this.ctx.measureText(text).width;
+    const textHeight = fontSize;
     this.ctx.fillStyle = "rgba(0,0,0,1.0)";
     this.ctx.fillRect(x, y, textWidth + padding, textHeight + padding);
     this.ctx.fillStyle = "#aaa";
-    this.ctx.font = font;
     this.ctx.fillText(text, x + padding / 2, y + padding / 2 + textHeight);
 
     //restore
@@ -318,6 +319,15 @@ class MHPCanvas extends BasicCanvas {
 }
 
 function initWidgets() {
+  const background = new StatelessWidget("background", null, {
+    size: {
+      top: new Length(0),
+      left: new Length(0),
+      width: new Length(1),
+      height: new Length(1),
+    },
+    backgroundColor: "#000000",
+  });
   const first = new StatelessWidget("first", null, {
     size: {
       top: new Length(0.25),
@@ -351,5 +361,5 @@ function initWidgets() {
     // backgroundColor: "transparent",
     opacity: 0.5,
   });
-  WidgetManager.push(first, second);
+  WidgetManager.push(background, first, second);
 }
