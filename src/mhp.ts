@@ -329,6 +329,8 @@ class MHPCanvas extends BasicCanvas {
       const { x, y, w, h } = this.findUpdateArea();
       this.ctx.clearRect(x, y, w, h);
       this.render();
+    } else {
+      this.showIdle();
     }
 
     if (true) {
@@ -364,6 +366,30 @@ class MHPCanvas extends BasicCanvas {
     this.ctx.font = font;
     const textWidth = this.ctx.measureText(text).width;
     const textHeight = fontSize;
+    this.ctx.fillStyle = "rgba(0,0,0,1.0)";
+    this.ctx.fillRect(x, y, textWidth + padding, textHeight + padding);
+    this.ctx.fillStyle = "#aaa";
+    this.ctx.fillText(text, x + padding / 2, y + padding / 2 + textHeight);
+
+    //restore
+    this.ctx.fillStyle = prev.fillStyle;
+    this.ctx.font = prev.font;
+  }
+
+  showIdle() {
+    // on the right corner, show isRendering
+    const text = "idle";
+    const font = "20px sans-serif";
+    this.ctx.font = font;
+    const textWidth = this.ctx.measureText(text).width;
+    const textHeight = 20;
+    const padding = 6;
+    const x = this.width - textWidth - padding;
+    const y = 0;
+    const prev = {
+      fillStyle: this.ctx.fillStyle,
+      font: this.ctx.font,
+    };
     this.ctx.fillStyle = "rgba(0,0,0,1.0)";
     this.ctx.fillRect(x, y, textWidth + padding, textHeight + padding);
     this.ctx.fillStyle = "#aaa";
