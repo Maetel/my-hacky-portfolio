@@ -8,9 +8,10 @@
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["components/*"],
-      "@scripts/*": ["scripts/*"],
-      "@types/*": ["types/*"]
+      "@/*": ["src/*"]
+      // "@scripts/*": ["scripts/*"],
+      // "@types/*": ["types/*"],
+      // "@class/*": ["class/*"]
     }
   }
 }

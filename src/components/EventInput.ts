@@ -1,4 +1,4 @@
-import { KeyCode } from "./types";
+import { KeyCode } from "../types";
 import TimerJob from "./Timer";
 
 export default class EventInput extends TimerJob {

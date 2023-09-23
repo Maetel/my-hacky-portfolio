@@ -1,4 +1,4 @@
-import { uuid } from "./utils";
+import { uuid } from "../utils";
 
 export type TimerJobCallbacks = {
   cancelOn?: () => boolean; // executed every cycle

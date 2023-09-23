@@ -1,5 +1,5 @@
-import { Area, KeyArea } from "./Area";
-import EventInput from "./EventInput";
+import { Area, KeyArea } from "./components/Area";
+import EventInput from "./components/EventInput";
 import {
   initialAnimStates,
   initialAreaBreakPoints,
@@ -30,7 +30,7 @@ import {
 } from "./utils";
 import * as C from "./constants";
 import * as s from "./styles";
-import { defaultCommands } from "./Command";
+import { defaultCommands } from "./class/Command";
 import VERSION from "./VERSION";
 let theCanvas: Canvas;
 
