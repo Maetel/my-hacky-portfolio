@@ -3,6 +3,7 @@ import { Length } from "@/class/StyleLength";
 import StyleLength from "@/class/StyleLength";
 import WidgetManager from "./WidgetManager";
 import WidgetStyle from "./WidgetStyle";
+import TimerJob from "./Timer";
 
 export const DefaultStatelessWidgetStyle: WidgetStyle = {
   position: "absolute",
@@ -20,7 +21,9 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
 export default class StatelessWidget extends Area {
   id: string;
   parent?: StatelessWidget | null = null;
+  children: StatelessWidget[] = [];
   style: WidgetStyle;
+  timerJob?: TimerJob;
   constructor(id: string, parent?: StatelessWidget, style?: WidgetStyle) {
     const defaultArea = () => {
       if (parent) {
@@ -50,6 +53,20 @@ export default class StatelessWidget extends Area {
       ...DefaultStatelessWidgetStyle,
       ...(style ? { ...style } : {}),
     };
-    WidgetManager.push(this);
+    // console.log("called");
+    // WidgetManager.push(this);
+  }
+  animate(
+    ms: number,
+    start: (w: StatelessWidget) => any,
+    cleanup?: (w: StatelessWidget) => any
+  ) {
+    if (cleanup) {
+      this.timerJob = new TimerJob();
+      this.timerJob.after(ms, () => {
+        cleanup(this);
+      });
+    }
+    start(this);
   }
 }

@@ -36,7 +36,6 @@ export default class EventInput extends TimerJob {
   }
 
   onPointerDown(e: MouseEvent) {
-    console.log("called");
     this.mouseDownX = e.clientX;
     this.mouseDownY = e.clientY;
     this.mouseMovePrevX = this.mouseDownX;

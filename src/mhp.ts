@@ -9,24 +9,12 @@ import {
   initialTerminalTop,
   initialUIStates,
 } from "./InitialValues";
-import {
-  AnimState,
-  AreaType,
-  BreakPoints,
-  InputState,
-  KeyCode,
-  RenderData,
-  State,
-  TerminalState,
-  UIState,
-  handlableKeyCodes,
-} from "./types";
+import { KeyCode, handlableKeyCodes } from "./types";
 import {
   isMobileDevice,
   myround,
   simpleHash,
   strPercentToFloat,
-  synthImageData,
   uuid,
 } from "./utils";
 import * as C from "./constants";
@@ -38,6 +26,7 @@ import { Length } from "./class/StyleLength";
 import StatelessWidget from "./components/StatelessWidget";
 import WidgetManager from "./components/WidgetManager";
 import { background } from "./components/WidgetStyle";
+import Animation, { buildAnimation } from "./class/Animation";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -153,10 +142,66 @@ class MHPCanvas extends BasicCanvas {
     super.onKeyUp(e);
   }
 
+  ////////////////////////////////////////////////////////
+  // handle events
+
+  handleClick() {
+    if (this.pointerMoveOn) {
+      console.log(this.pointerMoveOn);
+    }
+  }
+
+  direction = 1;
+
+  handlePointerDown() {
+    if (!this.pointerDownOn) {
+      return;
+    }
+    const clicked = this.pointerDownOn;
+    if (clicked.id === "second") {
+      console.log("Animation added");
+      this.addAnimation(
+        clicked,
+        300,
+        (dt: number) => {
+          console.log("every frame");
+          const FPS = 1000 / dt;
+          clicked.moveY(dt * this.direction * 0.1);
+        },
+        () => {
+          this.direction *= -1;
+        }
+      );
+    }
+  }
+
+  animations: Animation[] = [];
+  addAnimation(
+    widget: StatelessWidget,
+    duration: number,
+    everyFrame: (dt: number) => any,
+    onFinish?: () => any
+  ) {
+    const anim = buildAnimation(widget, duration, everyFrame, onFinish);
+    this.animations.push(anim);
+    this.after(duration, () => {
+      console.log("after");
+      this.animations = this.animations.filter(
+        (a: Animation) => a.widget.id !== widget.id
+      );
+      if (onFinish) {
+        onFinish();
+      }
+    });
+  }
+
+  handlePointerUp(widget: StatelessWidget) {}
+
   handleDrag() {
     if (!this.isDragging || this.pointerDownOn === null) {
       return;
     }
+
     const {
       mouseMoveX,
       mouseMoveY,
@@ -170,33 +215,34 @@ class MHPCanvas extends BasicCanvas {
 
     if (this.pointerDownOn.style?.grabbable) {
       this.pointerDownOn.move(dx, dy);
+      this.redraw();
     }
   }
-
-  ////////////////////////////////////////////////////////
-  // handle events
-
-  handleClick() {
-    if (this.pointerMoveOn) {
-      console.log(this.pointerMoveOn);
-    }
-  }
-
-  handlePointerDown() {}
-
-  handlePointerUp(widget: StatelessWidget) {}
 
   ////////////////////////////////////////////////////////
   // render
 
   dt: number;
   lastTimestamp: number;
+  _redraw = true; //draw first frame
+  _forceRedraw = false;
+  forceRedraw(value: boolean = true) {
+    this._forceRedraw = value;
+  }
+  redraw() {
+    this._redraw = true;
+  }
 
   updateScreen(force?: boolean) {
-    return force ?? true;
+    if (this._redraw || this.animations.length > 0 || this._forceRedraw) {
+      this._redraw = false;
+      return true;
+    }
+    return false;
   }
 
   render() {
+    // console.log("Rendered");
     WidgetManager.list().forEach((widget) => {
       if (!widget.style.visible) return;
       const { left, top, width, height, bottom } = widget.xywh;
@@ -275,6 +321,10 @@ class MHPCanvas extends BasicCanvas {
     //content
     // this.doOnce(this.render.bind(this));
     // this.logOnce(0, "logonce rendered", timestamp);
+
+    this.handleTimerJobs();
+    this.handleAnimation();
+
     if (this.updateScreen()) {
       const { x, y, w, h } = this.findUpdateArea();
       this.ctx.clearRect(x, y, w, h);
@@ -288,6 +338,13 @@ class MHPCanvas extends BasicCanvas {
     //!content
 
     this.currentAnimation = requestAnimationFrame(this._run.bind(this));
+  }
+
+  handleAnimation() {
+    // console.log(this.animations);
+    this.animations.forEach((animation) => {
+      animation.everyFrame(this.dt);
+    });
   }
 
   renderFPS() {
@@ -319,6 +376,7 @@ class MHPCanvas extends BasicCanvas {
 }
 
 function initWidgets() {
+  // console.log("called");
   const background = new StatelessWidget("background", null, {
     size: {
       top: new Length(0),
@@ -326,7 +384,7 @@ function initWidgets() {
       width: new Length(1),
       height: new Length(1),
     },
-    backgroundColor: "#000000",
+    backgroundColor: "#dfdfdf",
   });
   const first = new StatelessWidget("first", null, {
     size: {
@@ -361,5 +419,7 @@ function initWidgets() {
     // backgroundColor: "transparent",
     opacity: 0.5,
   });
-  WidgetManager.push(background, first, second);
+  // WidgetManager.push(background, first, second);
+  WidgetManager.push(first, second);
+  console.log(widgets);
 }

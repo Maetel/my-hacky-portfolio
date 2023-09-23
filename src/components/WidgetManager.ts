@@ -11,6 +11,7 @@ export default class WidgetManager {
     this.widgets.push(...args);
 
     args.forEach((widget) => {
+      console.log(widget.id);
       WidgetManager._push(widget);
     });
   }
@@ -65,4 +66,22 @@ export default class WidgetManager {
     }
     return null;
   }
+
+  static id(id: string): StatelessWidget | null {
+    return WidgetManager.widgets.find((widget) => widget.id === id) ?? null;
+  }
+
+  static pop(): StatelessWidget | null {
+    return WidgetManager.widgets.pop() ?? null;
+  }
+
+  static remove(id: string): StatelessWidget | null {
+    const index = WidgetManager.widgets.findIndex((widget) => widget.id === id);
+    if (index === -1) {
+      return null;
+    }
+    return WidgetManager.widgets.splice(index, 1)[0];
+  }
+
+  static delete = WidgetManager.remove;
 }
