@@ -48,7 +48,8 @@ window.onload = () => {
   const theCanvasElement = document.getElementById(
     "theCanvas"
   ) as HTMLCanvasElement;
-  const { innerWidth, innerHeight } = window;
+  const { clientHeight: innerWidth, clientWidth: innerHeight } =
+    document.documentElement;
   theCanvas = new Canvas(theCanvasElement, innerWidth, innerHeight);
 
   window.onresize = (event) => theCanvas.onResize(event);

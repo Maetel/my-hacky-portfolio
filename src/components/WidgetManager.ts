@@ -49,8 +49,9 @@ export default class WidgetManager {
 
   static resetWindowSize() {
     WidgetManager.widgets.forEach((widget) => {
-      widget.setScreenHeight(window.innerHeight);
-      widget.setScreenWidth(window.innerWidth);
+      const { clientHeight, clientWidth } = document.documentElement;
+      widget.setScreenHeight(clientHeight);
+      widget.setScreenWidth(clientWidth);
     });
   }
 

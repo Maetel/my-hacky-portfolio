@@ -56,8 +56,9 @@ window.onload = () => {
   const theCanvasElement = document.getElementById(
     "theCanvas"
   ) as HTMLCanvasElement;
-  const { innerWidth, innerHeight } = window;
-  theCanvas = new MHPCanvas(theCanvasElement, innerWidth, innerHeight);
+  const { clientHeight, clientWidth } = document.documentElement;
+  console.log({ clientWidth, clientHeight });
+  theCanvas = new MHPCanvas(theCanvasElement, clientWidth, clientHeight);
 
   window.onresize = (event) => theCanvas.onResize(event);
   window.onpointermove = (event) => theCanvas.onPointerMove(event);
@@ -167,6 +168,7 @@ class MHPCanvas extends BasicCanvas {
     } = this;
 
     if (this.pointerDownOn.style?.grabbable) {
+      console.log({ dx, dy });
       this.pointerDownOn.move(dx, dy);
     }
   }
@@ -312,8 +314,8 @@ function initWidgets() {
     size: {
       left: new Length(0.5),
       top: new Length(0.5),
-      width: new Length("300px"),
-      height: new Length(0.49),
+      width: new Length(0.45),
+      height: new Length(0.45),
     },
     backgroundColor: "#00ff00",
     // backgroundColor: "transparent",

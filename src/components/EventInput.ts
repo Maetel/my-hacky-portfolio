@@ -36,8 +36,11 @@ export default class EventInput extends TimerJob {
   }
 
   onPointerDown(e: MouseEvent) {
+    console.log("called");
     this.mouseDownX = e.clientX;
     this.mouseDownY = e.clientY;
+    this.mouseMovePrevX = this.mouseDownX;
+    this.mouseMovePrevY = this.mouseDownY;
     this.isDragging = true;
   }
 
@@ -76,7 +79,8 @@ export default class EventInput extends TimerJob {
   }
 
   onResize(e: UIEvent) {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    const { clientHeight, clientWidth } = document.documentElement;
+    this.width = clientWidth;
+    this.height = clientHeight;
   }
 }

@@ -41,9 +41,9 @@ export default class StatelessWidget extends Area {
       }
     };
     const inputArea = style?.size ?? defaultArea();
-    const { innerWidth, innerHeight } = window;
+    const { clientHeight, clientWidth } = document.documentElement;
 
-    super(innerWidth, innerHeight, inputArea);
+    super(clientWidth, clientHeight, inputArea);
     this.id = id;
     this.parent = parent;
     this.style = {
