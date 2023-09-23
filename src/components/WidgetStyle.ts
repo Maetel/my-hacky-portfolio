@@ -18,11 +18,21 @@ export default interface WidgetStyle {
   fontWeight?: number;
   fontStyle?: string;
   lineHeight?: string;
-  cursor?: "pointer" | "default" | "none";
+  cursor?:
+    | "pointer"
+    | "default"
+    | "none"
+    | "text"
+    | "move"
+    | "grab"
+    | "grabbing"
+    | "zoom-in"
+    | "zoom-out";
   position?: "absolute" | "relative" | "fixed";
 
   padding?: string;
   margin?: string;
+  hover?: WidgetStyle;
 }
 
 export const background = (

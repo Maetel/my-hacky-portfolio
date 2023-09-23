@@ -48,6 +48,11 @@ export default class EventInput extends TimerJob {
   }
 
   onKeyDown(e: KeyboardEvent) {
+    // open dev tools on F12
+    if (e.key === "F12") {
+      return;
+    }
+
     e.preventDefault();
     this.lastKey = e.key as KeyCode;
     this.keyInputs.push(e.key);

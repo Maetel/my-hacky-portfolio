@@ -46,4 +46,22 @@ export default class WidgetManager {
       return Array.from(WidgetManager.widgets.values());
     }
   }
+
+  static resetWindowSize() {
+    WidgetManager.widgets.forEach((widget) => {
+      widget.setScreenHeight(window.innerHeight);
+      widget.setScreenWidth(window.innerWidth);
+    });
+  }
+
+  static of(x: number, y: number): StatelessWidget | null {
+    const widgets = WidgetManager.widgets;
+    for (let i = widgets.length - 1; i >= 0; i--) {
+      const widget = widgets[i];
+      if (widget.contains(x, y)) {
+        return widget;
+      }
+    }
+    return null;
+  }
 }

@@ -49,6 +49,7 @@ const mobileSlicer = (array: any[]) => {
   return array;
 };
 const widgets = WidgetManager.widgets;
+const wmgr = WidgetManager;
 
 window.onload = () => {
   console.log(isMobile);
@@ -94,44 +95,47 @@ class MHPCanvas extends BasicCanvas {
         height: new Length(0.5),
       },
       backgroundColor: "#ff0000",
+      borderRadius: 30,
+      cursor: "pointer",
+      hover: {
+        borderColor: "#0000ff",
+        borderWidth: 2,
+      },
     });
     const second = new StatelessWidget("second", first, {
       size: {
-        right: new Length(0.01),
-        bottom: new Length(0.01),
-        width: new Length(0.5),
-        height: new Length(0.5),
+        left: new Length(0.5),
+        top: new Length(0.5),
+        width: new Length("300px"),
+        height: new Length(0.49),
       },
       backgroundColor: "#00ff00",
       // backgroundColor: "transparent",
-      opacity: 0.5,
+      // opacity: 0.5,
     });
     WidgetManager.push(first, second);
   }
 
   // @override
   onResize(e: UIEvent) {
-    this.cancelAnimation();
+    // this.cancelAnimation();
     super.onResize(e);
     this.setHeight(this.height);
     this.setWidth(this.width);
-    this.run();
+    WidgetManager.resetWindowSize();
+    // this.run();
   }
 
-  mouseOn: string | null = null;
+  mouseMoveOn: StatelessWidget | null = null;
 
   // @override
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
 
+    this.mouseMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
+
     //find in reverse order
-    for (let i = widgets.length - 1; i >= 0; i--) {
-      const widget = widgets[i];
-      if (widget.contains(this.mouseMoveX, this.mouseMoveY)) {
-        this.mouseOn = widget.id;
-        break;
-      }
-    }
+    this.canvas.style.cursor = this.mouseMoveOn?.style?.cursor ?? "default";
   }
   // input event overrides
 
@@ -175,8 +179,8 @@ class MHPCanvas extends BasicCanvas {
   // handle events
 
   handleClick() {
-    if (this.mouseOn) {
-      console.log(this.mouseOn);
+    if (this.mouseMoveOn) {
+      console.log(this.mouseMoveOn);
     }
   }
 
@@ -191,15 +195,19 @@ class MHPCanvas extends BasicCanvas {
     WidgetManager.list().forEach((widget) => {
       if (!widget.style.visible) return;
       const { left, top, width, height, bottom } = widget.xywh;
-      const style = widget.style;
+      const hovered = this.mouseMoveOn?.id === widget.id;
+      // const clicked = this.mouseMoveOn?.id === widget.id;
+      // console.log({ hovered,  });
+      const style =
+        hovered && widget.style.hover ? widget.style.hover : widget.style;
+      // console.log({ style });
       if (width === 0 || height === 0) return;
       const { left: lr, top: tr, width: wr, height: hr } = widget.xywhRatio;
       // console.log({ xywh: widget.xywh });
       const dst = `${bottom - 0.5}px`;
       if (widget.id === "first") {
-        // console.log({ top, height, bottom: `${bottom - 1}px` });
-        // widget.setStyle({ bottom: new Length(`${bottom - 1}px`) });
-        // widget.bottom = dst;
+        const dxdy = this.dt * 0.01;
+        widget.move(dxdy, dxdy);
       }
 
       // const gradient = this.ctx.createLinearGradient(0, 0, 200, 0);
@@ -209,10 +217,7 @@ class MHPCanvas extends BasicCanvas {
       // gradient.addColorStop(0.5, "green"); // Transition to green at 50%
       // gradient.addColorStop(1, "blue");
 
-      const backgroundColor = background(
-        widget.style.backgroundColor,
-        widget.style.opacity
-      );
+      const backgroundColor = background(style.backgroundColor, style.opacity);
       // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
       const drawBorder = style.borderColor && style.borderWidth;
       const prev = {
@@ -226,10 +231,10 @@ class MHPCanvas extends BasicCanvas {
         // console.log({ backgroundColor });
       }
 
-      this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 10);
+      this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 0);
       this.ctx.fill();
       if (drawBorder) {
-        this.ctx.strokeStyle = style.borderColor ?? "red";
+        this.ctx.strokeStyle = style.borderColor;
         this.ctx.lineWidth = style.borderWidth ?? 2;
         this.ctx.stroke();
       }

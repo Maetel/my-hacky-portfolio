@@ -206,3 +206,5 @@ export const simpleHash = (inputString: string): number => {
 
   return hashValue;
 };
+
+export const toPx = (number) => `${number}px`;

@@ -6,6 +6,7 @@ import {
   notNullish,
   strPercentToFloat,
   strPxToFloat,
+  toPx,
 } from "../utils";
 import error from "@/class/IError";
 
@@ -250,17 +251,17 @@ export class Area {
 
   setScreenHeight(screenHeight: number) {
     this.screenHeight = screenHeight;
-    Object.keys(this.horStyle).forEach((key) => {
+    Object.keys(this.verStyle).forEach((key) => {
       //update screen height
-      this.horStyle[key].screenPx = screenHeight;
+      this.verStyle[key].screenPx = screenHeight;
     });
   }
 
   setScreenWidth(screenWidth: number) {
     this.screenWidth = screenWidth;
-    Object.keys(this.verStyle).forEach((key) => {
+    Object.keys(this.horStyle).forEach((key) => {
       //update screen width
-      this.verStyle[key].screenPx = screenWidth;
+      this.horStyle[key].screenPx = screenWidth;
     });
   }
 
@@ -309,6 +310,21 @@ export class Area {
       ...this.horStyle,
       ...this.verStyle,
     });
+  }
+
+  moveX(dx: number) {
+    this.horStyle.left.length = toPx(this.horStyle.left.px + dx);
+    this.horStyle.right.length = toPx(this.horStyle.right.px + dx);
+  }
+
+  moveY(dy: number) {
+    this.verStyle.top.length = toPx(this.verStyle.top.px + dy);
+    this.verStyle.bottom.length = toPx(this.verStyle.bottom.px + dy);
+  }
+
+  move(dx: number, dy: number) {
+    this.moveX(dx);
+    this.moveY(dy);
   }
 }
 

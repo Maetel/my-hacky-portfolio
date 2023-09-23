@@ -42,12 +42,17 @@ export default class StatelessWidget extends Area {
     };
     const inputArea = style?.size ?? defaultArea();
     const { innerWidth, innerHeight } = window;
+    const hover = style?.hover
+      ? { ...style, ...{ ...style.hover }, hover: null }
+      : null;
+    console.log({ hoverStyle: hover });
+    const updatedStyle = style ? { ...style, hover } : {};
     super(innerWidth, innerHeight, inputArea);
     this.id = id;
     this.parent = parent;
     this.style = {
       ...DefaultStatelessWidgetStyle,
-      ...(style ?? {}),
+      ...updatedStyle,
     };
     WidgetManager.push(this);
   }
