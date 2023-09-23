@@ -13,15 +13,7 @@
     "build:copy": "cp -f build/mhp.$(cat .version).js build/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.latest.min.js && cp -f build/mhp.$(cat .version).js public/mhp.$(cat .version).js",
     "build:clean": "rm .version"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
   "devDependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@types/react": "^18.2.21",
-    "@types/react-dom": "^18.2.7",
     "concurrently": "^8.2.1",
     "esbuild": "^0.19.3",
     "serve": "^14.2.1",
