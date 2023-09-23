@@ -52,9 +52,9 @@ window.onload = () => {
   theCanvas = new Canvas(theCanvasElement, innerWidth, innerHeight);
 
   window.onresize = (event) => theCanvas.onResize(event);
-  window.onpointermove = (event) => theCanvas.onMouseMove(event);
-  window.onpointerdown = (event) => theCanvas.onMouseDown(event);
-  window.onpointerup = (event) => theCanvas.onMouseUp(event);
+  window.onpointermove = (event) => theCanvas.onPointerMove(event);
+  window.onpointerdown = (event) => theCanvas.onPointerDown(event);
+  window.onpointerup = (event) => theCanvas.onPointerUp(event);
   window.onkeydown = (event) => theCanvas.onKeyDown(event);
   window.onkeyup = (event) => theCanvas.onKeyUp(event);
   theCanvas.run();
@@ -313,8 +313,8 @@ class Canvas extends EventInput {
   };
 
   // @override
-  onMouseMove(e: MouseEvent) {
-    super.onMouseMove(e);
+  onPointerMove(e: MouseEvent) {
+    super.onPointerMove(e);
     this.mouseMoveArea = this.getAreaType(this.mouseMoveX, this.mouseMoveY);
   }
 
@@ -789,8 +789,8 @@ class Canvas extends EventInput {
   // input event overrides
 
   // @override
-  onMouseDown(e: MouseEvent) {
-    super.onMouseDown(e);
+  onPointerDown(e: MouseEvent) {
+    super.onPointerDown(e);
     this.mouseDownArea = this.getAreaType(this.mouseDownX, this.mouseDownY);
     this.dragStartArea = this.mouseDownArea;
     // console.log({ mouseDownArea: this.mouseDownArea });
@@ -810,8 +810,8 @@ class Canvas extends EventInput {
   }
 
   // @override
-  onMouseUp(e: MouseEvent) {
-    super.onMouseUp(e);
+  onPointerUp(e: MouseEvent) {
+    super.onPointerUp(e);
     this.mouseUpArea = this.getAreaType(this.mouseUpX, this.mouseUpY);
     this.dragEndArea = this.mouseUpArea;
   }

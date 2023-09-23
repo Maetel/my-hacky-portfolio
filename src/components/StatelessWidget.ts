@@ -9,7 +9,7 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
   visible: true,
   cursor: "default",
   opacity: 1,
-  backgroundColor: "white",
+  backgroundColor: "transparent",
   fontStyle: "normal",
   fontWeight: 400,
   fontSize: "16px",

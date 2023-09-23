@@ -26,7 +26,7 @@ export default class EventInput extends TimerJob {
     this.height = height;
   }
 
-  onMouseMove(e: MouseEvent) {
+  onPointerMove(e: MouseEvent) {
     this.mouseMoveX = e.clientX;
     this.mouseMoveY = e.clientY;
     this.dx = this.mouseMoveX - this.mouseMovePrevX;
@@ -35,13 +35,13 @@ export default class EventInput extends TimerJob {
     this.mouseMovePrevY = this.mouseMoveY;
   }
 
-  onMouseDown(e: MouseEvent) {
+  onPointerDown(e: MouseEvent) {
     this.mouseDownX = e.clientX;
     this.mouseDownY = e.clientY;
     this.isDragging = true;
   }
 
-  onMouseUp(e: MouseEvent) {
+  onPointerUp(e: MouseEvent) {
     this.mouseUpX = e.clientX;
     this.mouseUpY = e.clientY;
     this.isDragging = false;

@@ -37,6 +37,7 @@ import BasicCanvas from "./components/BasicCanvas";
 import { Length } from "./class/StyleLength";
 import StatelessWidget from "./components/StatelessWidget";
 import WidgetManager from "./components/WidgetManager";
+import { background } from "./components/WidgetStyle";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -47,6 +48,7 @@ const mobileSlicer = (array: any[]) => {
   }
   return array;
 };
+const widgets = WidgetManager.widgets;
 
 window.onload = () => {
   console.log(isMobile);
@@ -57,9 +59,9 @@ window.onload = () => {
   theCanvas = new MHPCanvas(theCanvasElement, innerWidth, innerHeight);
 
   window.onresize = (event) => theCanvas.onResize(event);
-  window.onpointermove = (event) => theCanvas.onMouseMove(event);
-  window.onpointerdown = (event) => theCanvas.onMouseDown(event);
-  window.onpointerup = (event) => theCanvas.onMouseUp(event);
+  window.onpointermove = (event) => theCanvas.onPointerMove(event);
+  window.onpointerdown = (event) => theCanvas.onPointerDown(event);
+  window.onpointerup = (event) => theCanvas.onPointerUp(event);
   window.onkeydown = (event) => theCanvas.onKeyDown(event);
   window.onkeyup = (event) => theCanvas.onKeyUp(event);
 
@@ -91,7 +93,7 @@ class MHPCanvas extends BasicCanvas {
         width: new Length(0.5),
         height: new Length(0.5),
       },
-      backgroundColor: "red",
+      backgroundColor: "#ff0000",
     });
     const second = new StatelessWidget("second", first, {
       size: {
@@ -100,7 +102,9 @@ class MHPCanvas extends BasicCanvas {
         width: new Length(0.5),
         height: new Length(0.5),
       },
-      backgroundColor: "blue",
+      backgroundColor: "#00ff00",
+      // backgroundColor: "transparent",
+      opacity: 0.5,
     });
     WidgetManager.push(first, second);
   }
@@ -114,25 +118,50 @@ class MHPCanvas extends BasicCanvas {
     this.run();
   }
 
+  mouseOn: string | null = null;
+
   // @override
-  onMouseMove(e: MouseEvent) {
-    super.onMouseMove(e);
+  onPointerMove(e: MouseEvent) {
+    super.onPointerMove(e);
+
+    //find in reverse order
+    for (let i = widgets.length - 1; i >= 0; i--) {
+      const widget = widgets[i];
+      if (widget.contains(this.mouseMoveX, this.mouseMoveY)) {
+        this.mouseOn = widget.id;
+        break;
+      }
+    }
   }
   // input event overrides
 
+  ////////////////////////////////////////////////////////
+  // overrides
+
   // @override
-  onMouseDown(e: MouseEvent) {
-    super.onMouseDown(e);
+  onPointerDown(e: MouseEvent) {
+    super.onPointerDown(e);
+    this.handleClick();
   }
 
   // @override
-  onMouseUp(e: MouseEvent) {
-    super.onMouseUp(e);
+  onPointerUp(e: MouseEvent) {
+    super.onPointerUp(e);
   }
 
   // @override
   onKeyDown(e: KeyboardEvent) {
     super.onKeyDown(e);
+
+    // refresh if cmd + R
+    if (this.isCommandBeingPressed && e.code === "KeyR") {
+      window.location.reload();
+    }
+  }
+
+  // @override
+  onKeyUp(e: KeyboardEvent) {
+    super.onKeyUp(e);
   }
 
   handleDrag() {
@@ -140,6 +169,15 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const { mouseMoveX, mouseMoveY, mouseDownX, mouseDownY } = this;
+  }
+
+  ////////////////////////////////////////////////////////
+  // handle events
+
+  handleClick() {
+    if (this.mouseOn) {
+      console.log(this.mouseOn);
+    }
   }
 
   dt: number;
@@ -161,9 +199,8 @@ class MHPCanvas extends BasicCanvas {
       if (widget.id === "first") {
         // console.log({ top, height, bottom: `${bottom - 1}px` });
         // widget.setStyle({ bottom: new Length(`${bottom - 1}px`) });
-        widget.bottom = dst;
+        // widget.bottom = dst;
       }
-      const color = `rgba(${lr * 255},${tr * 255},${wr * 255}, 0.5)`;
 
       // const gradient = this.ctx.createLinearGradient(0, 0, 200, 0);
 
@@ -172,19 +209,30 @@ class MHPCanvas extends BasicCanvas {
       // gradient.addColorStop(0.5, "green"); // Transition to green at 50%
       // gradient.addColorStop(1, "blue");
 
+      const backgroundColor = background(
+        widget.style.backgroundColor,
+        widget.style.opacity
+      );
       // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
+      const drawBorder = style.borderColor && style.borderWidth;
       const prev = {
         fillStyle: this.ctx.fillStyle,
         strokeStyle: this.ctx.strokeStyle,
         lineWidth: this.ctx.lineWidth,
       };
 
-      this.ctx.fillStyle = color;
-      this.ctx.strokeStyle = style.borderColor ?? "red";
-      this.ctx.lineWidth = style.borderWidth ?? 2;
+      this.ctx.fillStyle = backgroundColor;
+      if (widget.id === "second") {
+        // console.log({ backgroundColor });
+      }
+
       this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 10);
       this.ctx.fill();
-      this.ctx.stroke();
+      if (drawBorder) {
+        this.ctx.strokeStyle = style.borderColor ?? "red";
+        this.ctx.lineWidth = style.borderWidth ?? 2;
+        this.ctx.stroke();
+      }
 
       //restore
       this.ctx.fillStyle = prev.fillStyle;
