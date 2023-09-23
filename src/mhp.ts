@@ -133,6 +133,7 @@ class MHPCanvas extends BasicCanvas {
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
     this.pointerDownOn = null;
+    this.pointerMoveOn = null; // mobile
     const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
     this.handlePointerUp(pointerUpOn);
   }
