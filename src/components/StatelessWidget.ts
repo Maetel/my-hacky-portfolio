@@ -3,7 +3,9 @@ import { Length } from "@/class/StyleLength";
 import StyleLength from "@/class/StyleLength";
 import WidgetManager from "./WidgetManager";
 import WidgetStyle from "./WidgetStyle";
-import TimerJob from "./Timer";
+import TimerJob from "./TimerJob";
+import WidgetState from "@/class/WidgetState";
+import error from "@/class/IError";
 
 export const DefaultStatelessWidgetStyle: WidgetStyle = {
   position: "absolute",
@@ -22,7 +24,7 @@ export default class StatelessWidget extends Area {
   id: string;
   parent?: StatelessWidget | null = null;
   children: StatelessWidget[] = [];
-  style: WidgetStyle;
+  _style: WidgetStyle;
   timerJob?: TimerJob;
   constructor(id: string, parent?: StatelessWidget, style?: WidgetStyle) {
     const defaultArea = () => {
@@ -49,12 +51,10 @@ export default class StatelessWidget extends Area {
     super(clientWidth, clientHeight, inputArea);
     this.id = id;
     this.parent = parent;
-    this.style = {
+    this._style = {
       ...DefaultStatelessWidgetStyle,
       ...(style ? { ...style } : {}),
     };
-    // console.log("called");
-    // WidgetManager.push(this);
   }
   animate(
     ms: number,
@@ -63,10 +63,31 @@ export default class StatelessWidget extends Area {
   ) {
     if (cleanup) {
       this.timerJob = new TimerJob();
-      this.timerJob.after(ms, () => {
+      this.timerJob.timeout(ms, () => {
         cleanup(this);
       });
     }
     start(this);
+  }
+
+  get state(): WidgetState | null {
+    return null;
+  }
+  set state(state: WidgetState | null) {
+    error("StatelessWidget cannot have state : ", { state });
+  }
+
+  get style(): WidgetStyle {
+    return this._style;
+  }
+
+  set style(style: WidgetStyle) {
+    this._style = { ...style };
+    this.left = style.size.left.length;
+    this.top = style.size.top.length;
+    this.width = style.size.width.length;
+    this.height = style.size.height.length;
+    // this.right = style.size.right.length;
+    // this.bottom = style.size.bottom.length;
   }
 }

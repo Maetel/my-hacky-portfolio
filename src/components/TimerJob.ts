@@ -24,8 +24,12 @@ export default class TimerJob {
     } & TimerJobCallbacks
   > = new Map();
 
-  after(ms: number, f: () => any, callbacks?: TimerJobCallbacks, id?: string) {
-    console.log({ now: this.now() });
+  timeout(
+    ms: number,
+    f: () => any,
+    callbacks?: TimerJobCallbacks,
+    id?: string
+  ) {
     id = id ?? uuid();
     this.timerJobs.set(id, {
       start: this.now(),
@@ -36,7 +40,8 @@ export default class TimerJob {
     });
     return id;
   }
-  onEveryMs(
+
+  interval(
     ms: number,
     f: () => any,
     callbacks?: TimerJobCallbacks,

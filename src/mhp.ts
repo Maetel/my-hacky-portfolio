@@ -26,7 +26,17 @@ import { Length } from "./class/StyleLength";
 import StatelessWidget from "./components/StatelessWidget";
 import WidgetManager from "./components/WidgetManager";
 import { background } from "./components/WidgetStyle";
-import Animation, { buildAnimation } from "./class/Animation";
+import Animation, {
+  AnimationCallback,
+  AnimationOnFinish,
+  AnimationOptions,
+  buildAnimation,
+} from "./class/Animation";
+import StatefulWidget, {
+  asStateful,
+  setState,
+} from "./components/StatefulWidget";
+import error from "./class/IError";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -41,12 +51,10 @@ const widgets = WidgetManager.widgets;
 const wmgr = WidgetManager;
 
 window.onload = () => {
-  console.log(isMobile);
   const theCanvasElement = document.getElementById(
     "theCanvas"
   ) as HTMLCanvasElement;
   const { clientHeight, clientWidth } = document.documentElement;
-  console.log({ clientWidth, clientHeight });
   theCanvas = new MHPCanvas(theCanvasElement, clientWidth, clientHeight);
 
   window.onresize = (event) => theCanvas.onResize(event);
@@ -159,40 +167,67 @@ class MHPCanvas extends BasicCanvas {
     }
     const clicked = this.pointerDownOn;
     if (clicked.id === "second") {
-      console.log("Animation added");
-      this.addAnimation(
-        clicked,
-        300,
-        (dt: number) => {
-          console.log("every frame");
-          const FPS = 1000 / dt;
-          clicked.moveY(dt * this.direction * 0.1);
-        },
-        () => {
-          this.direction *= -1;
-        }
-      );
+      const stful = asStateful(clicked);
+      const animId = "swing";
+      if (!stful.hasAnimation(animId)) {
+        this.addAnimation({
+          widget: stful,
+          duration: 1000,
+          everyFrame: (elapsed: number, dt: number) => {
+            const FPS = 1000 / dt;
+            // console.log({ elapsed });
+            clicked.moveY(10 * Math.sin(elapsed / 50));
+          },
+          onFinish: (elapsed, w) => {},
+          animId,
+          returnOnFinish: true,
+        });
+      } else {
+        console.log("already running : ", animId);
+      }
     }
   }
 
   animations: Animation[] = [];
-  addAnimation(
-    widget: StatelessWidget,
-    duration: number,
-    everyFrame: (dt: number) => any,
-    onFinish?: () => any
-  ) {
-    const anim = buildAnimation(widget, duration, everyFrame, onFinish);
-    this.animations.push(anim);
-    this.after(duration, () => {
-      console.log("after");
-      this.animations = this.animations.filter(
-        (a: Animation) => a.widget.id !== widget.id
-      );
-      if (onFinish) {
-        onFinish();
+  addAnimation(options: AnimationOptions): string {
+    const { widget, duration, everyFrame, onFinish, animId, returnOnFinish } =
+      options;
+    if (animId) {
+      const found =
+        this.animations.find((a: Animation) => a.id === animId) ||
+        widget.hasAnimation(animId);
+      if (found) {
+        error("Animation already exists : ", { animId });
       }
+    }
+
+    const anim = buildAnimation(options);
+
+    this.animations.push(anim);
+
+    this.timeout(duration, () => {
+      const found = this.animations.find((a: Animation) => a === anim);
+      if (!found) {
+        // animation is deleted before it ends
+        console.log("animation is deleted before it ends");
+        return;
+      }
+
+      const w = found.widget;
+      const filteredAnimationIDs = w.state.animations.filter(
+        (animationId: string) => animationId !== anim.id
+      );
+      setState(w, { animations: filteredAnimationIDs });
+
+      this.animations = this.animations.filter((a: Animation) => a !== found);
+      if (anim.returnOnFinish) {
+        w.style = { ...found.startStyle };
+      }
+      onFinish?.(Date.now() - found.startTimestamp, w);
+      this.redraw();
     });
+
+    return animId ?? anim.id;
   }
 
   handlePointerUp(widget: StatelessWidget) {}
@@ -243,13 +278,13 @@ class MHPCanvas extends BasicCanvas {
 
   render() {
     // console.log("Rendered");
-    WidgetManager.list().forEach((widget) => {
-      if (!widget.style.visible) return;
+    widgets.forEach((widget) => {
+      if (!widget.style.visible) {
+        return;
+      }
       const { left, top, width, height, bottom } = widget.xywh;
       const hovered = this.pointerMoveOn?.id === widget.id;
       const pointerDown = this.pointerDownOn?.id === widget.id;
-      // const pointerUp = this.pointerUpOn?.id === widget.id;
-      // console.log({ hovered,  });
 
       let style = { ...widget.style };
       if (pointerDown && widget.style.mouseDown) {
@@ -258,9 +293,9 @@ class MHPCanvas extends BasicCanvas {
         style = { ...style, ...widget.style.hover };
       }
 
-      // console.log({ style });
-      if (width === 0 || height === 0) return;
-      const { left: lr, top: tr, width: wr, height: hr } = widget.xywhRatio;
+      if (width === 0 || height === 0) {
+        return;
+      }
 
       const backgroundColor = background(style.backgroundColor, style.opacity);
       // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
@@ -272,10 +307,6 @@ class MHPCanvas extends BasicCanvas {
       };
 
       this.ctx.fillStyle = backgroundColor;
-      if (widget.id === "second") {
-        // console.log({ backgroundColor });
-      }
-
       this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 0);
       this.ctx.fill();
       if (drawBorder) {
@@ -345,7 +376,7 @@ class MHPCanvas extends BasicCanvas {
   handleAnimation() {
     // console.log(this.animations);
     this.animations.forEach((animation) => {
-      animation.everyFrame(this.dt);
+      animation.everyFrame(Date.now() - animation.startTimestamp, this.dt);
     });
   }
 
@@ -434,7 +465,7 @@ function initWidgets() {
       cursor: "grabbing",
     },
   });
-  const second = new StatelessWidget("second", first, {
+  const second = new StatefulWidget("second", first, {
     size: {
       left: new Length(0.5),
       top: new Length(0.5),
@@ -447,5 +478,5 @@ function initWidgets() {
   });
   // WidgetManager.push(background, first, second);
   WidgetManager.push(first, second);
-  console.log(widgets);
+  // console.log(widgets);
 }

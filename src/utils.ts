@@ -208,3 +208,25 @@ export const simpleHash = (inputString: string): number => {
 };
 
 export const toPx = (number) => `${number}px`;
+
+export function deepCopy(obj: any): any {
+  if (obj === null || typeof obj !== "object") {
+    return obj; // Return primitive values as is
+  }
+
+  if (Array.isArray(obj)) {
+    const newArray = [];
+    for (let i = 0; i < obj.length; i++) {
+      newArray[i] = deepCopy(obj[i]);
+    }
+    return newArray;
+  }
+
+  const newObj: { [key: string]: any } = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      newObj[key] = deepCopy(obj[key]);
+    }
+  }
+  return newObj;
+}

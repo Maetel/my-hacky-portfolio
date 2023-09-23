@@ -1,5 +1,5 @@
 import { KeyCode } from "../types";
-import TimerJob from "./Timer";
+import TimerJob from "./TimerJob";
 
 export default class EventInput extends TimerJob {
   protected width: number;

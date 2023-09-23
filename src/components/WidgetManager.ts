@@ -8,18 +8,16 @@ export default class WidgetManager {
   static widgets: StatelessWidget[] = [];
 
   static push(...args: StatelessWidget[]) {
-    this.widgets.push(...args);
-
+    // console.log("pushed : ", args[0].id, " n : ", args.length);
     args.forEach((widget) => {
-      console.log(widget.id);
       WidgetManager._push(widget);
     });
   }
 
   static _push(widget: StatelessWidget) {
-    widget.style.zIndex = widget.style.zIndex ?? WidgetManager.highestZ;
+    widget._style.zIndex = widget._style.zIndex ?? WidgetManager.highestZ;
     WidgetManager.highestZ = Math.max(
-      widget.style.zIndex,
+      widget._style.zIndex,
       WidgetManager.highestZ
     );
     WidgetManager.widgets.push(widget);
@@ -32,20 +30,18 @@ export default class WidgetManager {
       | ((a: StatelessWidget, b: StatelessWidget) => number) = "zIndex"
   ) {
     if (order === "zIndex") {
-      WidgetManager.widgets.sort((a, b) => a.style.zIndex - b.style.zIndex);
+      WidgetManager.widgets.sort((a, b) => a._style.zIndex - b._style.zIndex);
     } else {
       WidgetManager.widgets.sort(order);
     }
   }
 
-  static list(inZorder: boolean = true) {
-    if (inZorder) {
-      return Array.from(WidgetManager.widgets.values()).sort(
-        (a, b) => a.style.zIndex - b.style.zIndex
-      );
-    } else {
-      return Array.from(WidgetManager.widgets.values());
-    }
+  static stful() {
+    return WidgetManager.widgets.filter((w) => w.state !== null);
+  }
+
+  static stless() {
+    return WidgetManager.widgets.filter((w) => w.state === null);
   }
 
   static resetWindowSize() {
