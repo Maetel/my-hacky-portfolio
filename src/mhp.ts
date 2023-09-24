@@ -1,14 +1,6 @@
 import { Area, KeyArea } from "./components/Area";
 import EventInput from "./components/EventInput";
-import {
-  initialAnimStates,
-  initialAreaBreakPoints,
-  initialInputStates,
-  initialTerminalBottom,
-  initialTerminalStates,
-  initialTerminalTop,
-  initialUIStates,
-} from "./InitialValues";
+import { initWidgets } from "./InitialValues";
 import { KeyCode, handlableKeyCodes } from "./types";
 import {
   isMobileDevice,
@@ -25,7 +17,7 @@ import VERSION from "./VERSION";
 import BasicCanvas from "./components/BasicCanvas";
 import StatelessWidget from "./components/StatelessWidget";
 import WidgetManager from "./components/WidgetManager";
-import { background } from "./components/WidgetStyle";
+import WidgetStyle, { background } from "./components/WidgetStyle";
 import Animation, {
   AnimationCallback,
   AnimationOnFinish,
@@ -37,7 +29,7 @@ import StatefulWidget, {
   setState,
 } from "./components/StatefulWidget";
 import error from "./class/IError";
-import Store from "./class/Store";
+import Store, { STORE_RERENDER } from "./class/Store";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -48,7 +40,7 @@ const mobileSlicer = (array: any[]) => {
   }
   return array;
 };
-const widgets = WidgetManager.widgets;
+const widgets = () => WidgetManager.widgets;
 const wmgr = WidgetManager;
 
 window.onload = () => {
@@ -57,6 +49,7 @@ window.onload = () => {
   ) as HTMLCanvasElement;
   const { clientHeight, clientWidth } = document.documentElement;
   theCanvas = new MHPCanvas(theCanvasElement, clientWidth, clientHeight);
+  Store.set(STORE_RERENDER, () => theCanvas.redraw());
 
   window.onresize = (event) => theCanvas.onResize(event);
   window.onpointermove = (event) => theCanvas.onPointerMove(event);
@@ -66,7 +59,6 @@ window.onload = () => {
   window.onkeyup = (event) => theCanvas.onKeyUp(event);
 
   initWidgets();
-
   theCanvas.run();
 };
 
@@ -133,17 +125,17 @@ class MHPCanvas extends BasicCanvas {
     this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
     // console.log({ down: this.pointerDownOn?.style?.cursor });
     this.canvas.style.cursor =
-      this.pointerDownOn?.style?.mouseDown?.cursor ?? "default";
+      this.pointerDownOn?.style?.pointerDown?.cursor ?? "default";
     this.handlePointerDown();
   }
 
   // @override
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
-    this.pointerDownOn = null;
-    this.pointerMoveOn = null; // mobile
     const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
     this.handlePointerUp(pointerUpOn);
+    this.pointerDownOn = null;
+    this.pointerMoveOn = null; // mobile
     this.redraw();
   }
 
@@ -165,10 +157,8 @@ class MHPCanvas extends BasicCanvas {
   ////////////////////////////////////////////////////////
   // handle events
 
-  handleClick() {
-    if (this.pointerMoveOn) {
-      console.log(this.pointerMoveOn);
-    }
+  handleClick(widget: StatelessWidget) {
+    this.pointerDownOn?.inputOption?.onClick?.(widget);
   }
 
   direction = 1;
@@ -178,17 +168,17 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const clicked = this.pointerDownOn;
-    if (clicked.id === "second") {
+    if (clicked.id === "stls-1") {
       const stful = asStateful(clicked);
       const animId = "swing";
       if (!stful.hasAnimation(animId)) {
         this.addAnimation({
           widget: stful,
-          duration: 2000,
+          duration: 3000,
           everyFrame: (elapsed: number, dt: number) => {
             const FPS = 1000 / dt;
             // console.log({ elapsed });
-            clicked.moveY(10 * Math.sin(elapsed / 50));
+            clicked.moveY(10 * Math.sin(elapsed / 200));
           },
           onFinish: (elapsed, w) => {},
           animId,
@@ -199,15 +189,15 @@ class MHPCanvas extends BasicCanvas {
       }
     }
 
-    if (clicked.id === "third") {
-      const stful = asStateful(clicked);
+    if (clicked.id === "stls-2") {
+      const stful = clicked;
       const {
         x: orgLeft,
         y: orgTop,
         w: orgWidth,
         h: orgHeight,
       } = stful.xywhRelative;
-      console.log({ thirdLrwh: stful.lrwh });
+      // console.log({ thirdLrwh: stful.lrwh });
       const orgStyle = stful.style;
 
       const jobId = "untiljob";
@@ -305,7 +295,13 @@ class MHPCanvas extends BasicCanvas {
     return animId ?? anim.id;
   }
 
-  handlePointerUp(widget: StatelessWidget) {}
+  handlePointerUp(widget: StatelessWidget) {
+    // console.log({ d: this.pointerDownOn?.id, u: widget?.id });
+    if (this.pointerDownOn?.id === widget?.id) {
+      this.handleClick(widget);
+    }
+    this.redraw();
+  }
 
   handleDrag() {
     if (!this.isDragging || this.pointerDownOn === null) {
@@ -364,8 +360,8 @@ class MHPCanvas extends BasicCanvas {
     const pointerDown = this.pointerDownOn?.id === widget.id;
 
     let style = { ...widget.style };
-    if (pointerDown && widget.style.mouseDown) {
-      style = { ...style, ...widget.style.mouseDown };
+    if (pointerDown && widget.style.pointerDown) {
+      style = { ...style, ...widget.style.pointerDown };
     } else if (hovered && widget.style.hover) {
       style = { ...style, ...widget.style.hover };
       // console.log({ hoverStyle: style });
@@ -404,7 +400,7 @@ class MHPCanvas extends BasicCanvas {
 
   render() {
     // console.log("Rendered");
-    widgets.forEach((widget) => {
+    widgets().forEach((widget) => {
       // this call will recursively render all children
       this._renderWidget(widget);
     });
@@ -440,31 +436,37 @@ class MHPCanvas extends BasicCanvas {
 
   // @override
   _run(timestamp: number) {
-    this.dt = timestamp - this.lastTimestamp;
-    this.lastTimestamp = timestamp;
+    try {
+      this.dt = timestamp - this.lastTimestamp;
+      this.lastTimestamp = timestamp;
 
-    //content
-    // this.doOnce(this.render.bind(this));
-    // this.logOnce(0, "logonce rendered", timestamp);
+      //content
+      // this.doOnce(this.render.bind(this));
+      // this.logOnce(0, "logonce rendered", timestamp);
 
-    this.handleTimerJobs();
-    this.handleAnimation();
+      this.handleTimerJobs();
+      this.handleAnimation();
 
-    if (this.updateScreen()) {
-      const { x, y, w, h } = this.findUpdateArea();
-      this.ctx.clearRect(x, y, w, h);
-      this.render();
-    } else {
-      this.showIdle();
+      if (this.updateScreen()) {
+        const { x, y, w, h } = this.findUpdateArea();
+        this.ctx.clearRect(x, y, w, h);
+        this.render();
+      } else {
+        this.showIdle();
+      }
+
+      if (true) {
+        this.renderFPS();
+        this.showWidgets();
+      }
+
+      //!content
+
+      this.currentAnimation = requestAnimationFrame(this._run.bind(this));
+    } catch (e) {
+      console.log(e);
+      debugger;
     }
-
-    if (true) {
-      this.renderFPS();
-    }
-
-    //!content
-
-    this.currentAnimation = requestAnimationFrame(this._run.bind(this));
   }
 
   handleAnimation() {
@@ -524,64 +526,32 @@ class MHPCanvas extends BasicCanvas {
     this.ctx.fillStyle = prev.fillStyle;
     this.ctx.font = prev.font;
   }
-}
 
-function initWidgets() {
-  // console.log("called");
-  // const background = new StatelessWidget("background", null, {
-  //   size: {
-  //     top: 0,
-  //     left: 0,
-  //     width: 1,
-  //     height: 1,
-  //   },
-  //   backgroundColor: "#dfdfdf",
-  // });
-  const first = new StatelessWidget("first", null, {
-    size: {
-      left: "100px",
-      width: 0.8,
-      top: 0.1,
-      height: 0.5,
-    },
-    backgroundColor: "#ff0000",
-    borderRadius: 30,
-    grabbable: true,
-    hover: {
-      borderColor: "#0000ff",
-      borderWidth: 2,
-      cursor: "pointer",
-    },
-    mouseDown: {
-      backgroundColor: "#dd0000",
-      borderColor: "#00ff00",
-      borderWidth: 3,
-      cursor: "grabbing",
-    },
-  });
-  const second = new StatefulWidget("second", first, {
-    size: {
-      left: "100px",
-      bottom: "100px",
-      width: "250px",
-      height: "350px",
-    },
-    backgroundColor: "#00ff00",
-    // backgroundColor: "transparent",
-    opacity: 0.5,
-  });
-  const third = new StatefulWidget("third", second, {
-    size: {
-      left: "100px",
-      top: 0.3,
-      width: "100px",
-      height: 0.4,
-    },
-    backgroundColor: "#0000ff",
-    opacity: 0.5,
-  });
-  // WidgetManager.push(background, first, second);
-  WidgetManager.push(first, second, third);
-  // WidgetManager.push(first);
-  console.log("Widgets : ", widgets);
+  showWidgets() {
+    // on the right corner, show isRendering
+    const text =
+      "Widgets:" +
+      widgets()
+        .map((w) => w.id)
+        .join(",");
+    const font = "20px sans-serif";
+    this.ctx.font = font;
+    const textWidth = this.ctx.measureText(text).width;
+    const textHeight = 20;
+    const padding = 6;
+    const x = padding;
+    const y = this.height - textHeight - padding;
+    const prev = {
+      fillStyle: this.ctx.fillStyle,
+      font: this.ctx.font,
+    };
+    this.ctx.fillStyle = "rgba(0,0,0,1.0)";
+    this.ctx.fillRect(x, y, textWidth + padding, textHeight + padding);
+    this.ctx.fillStyle = "#aaa";
+    this.ctx.fillText(text, x + padding / 2, y + padding / 2 + textHeight);
+
+    //restore
+    this.ctx.fillStyle = prev.fillStyle;
+    this.ctx.font = prev.font;
+  }
 }

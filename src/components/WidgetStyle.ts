@@ -13,15 +13,10 @@ export default interface WidgetStyle {
   zIndex?: number;
   grabbable?: boolean;
   position?: "relative" | "global";
-
-  // TODOS
   opacity?: number;
-  color?: string;
-  textAlign?: "left" | "center" | "right";
-  fontSize?: string;
-  fontWeight?: number;
-  fontStyle?: string;
-  lineHeight?: string;
+  hover?: WidgetStyle;
+  pointerDown?: WidgetStyle;
+  pointerUp?: WidgetStyle;
   cursor?:
     | "pointer"
     | "default"
@@ -33,11 +28,16 @@ export default interface WidgetStyle {
     | "zoom-in"
     | "zoom-out";
 
+  // TODOS
+  color?: string;
+  textAlign?: "left" | "center" | "right";
+  fontSize?: string;
+  fontWeight?: number;
+  fontStyle?: string;
+  lineHeight?: string;
+
   padding?: string;
   margin?: string;
-  hover?: WidgetStyle;
-  mouseDown?: WidgetStyle;
-  mouseUp?: WidgetStyle;
 }
 
 export const background = (

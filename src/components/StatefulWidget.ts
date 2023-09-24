@@ -1,17 +1,17 @@
 import WidgetState, { DefaultWidgetState } from "@/class/WidgetState";
-import StatelessWidget from "./StatelessWidget";
+import StatelessWidget, { StatelessWidgetOption } from "./StatelessWidget";
 import WidgetStyle from "./WidgetStyle";
 import error from "@/class/IError";
 
 export default class StatefulWidget extends StatelessWidget {
   _state: WidgetState;
   constructor(
-    id: string,
-    parent?: StatelessWidget,
-    style?: WidgetStyle,
-    state?: WidgetState
+    options?: StatelessWidgetOption & {
+      state?: WidgetState;
+    }
   ) {
-    super(id, parent, style);
+    const { state, ...rest } = options;
+    super(rest);
     this._state = { ...DefaultWidgetState, ...(state ? { ...state } : {}) };
   }
 
@@ -32,12 +32,11 @@ export default class StatefulWidget extends StatelessWidget {
 
   // @override
   copied(id?: string) {
-    const retval = new StatefulWidget(
-      id ?? this.id,
-      this.parent,
-      { ...this.style },
-      { ...this.state }
-    );
+    const retval = new StatefulWidget({
+      id: id ?? this.id,
+      ...this.buildOption(),
+      ...this.state,
+    });
     return retval;
   }
 }

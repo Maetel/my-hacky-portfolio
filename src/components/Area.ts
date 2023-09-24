@@ -77,9 +77,11 @@ const getAreaSizeInputType = (size: AreaInputSize): AreaSizeInputType => {
   return retval;
 };
 
-export class Area {
-  parent: Area | null;
-  children: Area[] = [];
+export abstract class Area {
+  abstract parent: Area | null;
+  abstract children: Area[];
+  abstract copied();
+  abstract addChild(child: Area): void;
   // parentHorSize: AreaLength; // screenWidth if parent is null
   // parentVerSize: AreaLength; // screenHeight if parent is null
   _width: number; // screenwidth
@@ -93,10 +95,7 @@ export class Area {
     verAlign: AreaAlign = "top",
     horAlign: AreaAlign = "left"
   ) {
-    this.parent = parent;
-    if (parent) {
-      parent.children.push(this);
-    }
+    // parent?.addChild(this);
     this.updateScreenSize();
     this.horSize.align = horAlign;
     this.verSize.align = verAlign;
@@ -411,13 +410,6 @@ export class Area {
     const top = this.top;
     const bottom = this.bottom;
     return top <= y && y <= bottom && left <= x && x <= right;
-  }
-
-  copied() {
-    const retval = new Area(this.parent);
-    retval.horSize = { ...this.horSize };
-    retval.verSize = { ...this.verSize };
-    return retval;
   }
 
   get xywh() {

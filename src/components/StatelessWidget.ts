@@ -3,6 +3,7 @@ import WidgetStyle from "./WidgetStyle";
 import TimerJob from "./TimerJob";
 import WidgetState from "@/class/WidgetState";
 import error from "@/class/IError";
+import Store from "@/class/Store";
 
 export const DefaultStatelessWidgetStyle: WidgetStyle = {
   position: "relative",
@@ -17,25 +18,62 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
   color: "black",
 };
 
+export type OnDestoryWithoutCleanup = (stls: StatelessWidget) => any;
+export type OnDestoryWithCleanup = (
+  stls: StatelessWidget,
+  cleanUp: () => any
+) => any;
+export type OnCreate = (stls: StatelessWidget) => any;
+export interface StatelessWidgetOption {
+  parent?: StatelessWidget;
+  style?: WidgetStyle;
+  id?: string;
+  copiedFrom?: StatelessWidget;
+  onClick?: (stls: StatelessWidget) => any;
+  onCreate?: OnCreate;
+  onDestroy?: OnDestoryWithoutCleanup;
+  onDestroyWithCleanup?: OnDestoryWithCleanup;
+}
+
 export default class StatelessWidget extends Area {
+  addOrder: number;
+  copiedFrom?: StatelessWidget;
   id: string;
   parent: StatelessWidget | null = null;
   children: StatelessWidget[] = [];
   _style: WidgetStyle;
   timerJob?: TimerJob;
-  constructor(id: string, parent?: StatelessWidget, style?: WidgetStyle) {
+  inputOption?: StatelessWidgetOption;
+  constructor(option?: StatelessWidgetOption) {
+    const { parent, style, id, copiedFrom } = option;
     const verAlign = style?.verAlign ?? (style?.size?.top ? "top" : "bottom");
     const horAlign = style?.horAlign ?? (style?.size?.left ? "left" : "right");
-    // console.log({ verAlign, horAlign });
     super(parent, style?.size ?? "full", verAlign, horAlign);
-    if (parent) {
-      parent.children.push(this);
-    }
+
+    this.addOrder = Store.getNewWidgetAddOrder();
+    this.inputOption = option;
     this.parent = parent;
-    this.id = id;
+    // console.log({ pcl: parent?.children.length, ao: this.addOrder });
+    this.id =
+      id ??
+      `${parent?.id ?? "stls"}-${parent?.children.length ?? this.addOrder}`;
+    this.copiedFrom = copiedFrom;
     this._style = {
       ...DefaultStatelessWidgetStyle,
       ...(style ? { ...style } : {}),
+    };
+    parent?.addChild(this);
+    Store.onStatelessWidgetCreate(this);
+    console.log("Created : ", this.id);
+  }
+  buildOption() {
+    return {
+      ...this.inputOption,
+      id: this.id,
+      style: { ...this._style },
+      parent: this.parent,
+      copiedFrom: this.copiedFrom,
+      children: [...this.children],
     };
   }
   animate(
@@ -50,6 +88,16 @@ export default class StatelessWidget extends Area {
       });
     }
     start(this);
+  }
+
+  get depth(): number {
+    let retval = 0;
+    let parent = this.parent;
+    while (parent) {
+      retval++;
+      parent = parent.parent;
+    }
+    return retval;
   }
 
   get state(): WidgetState | null {
@@ -71,9 +119,63 @@ export default class StatelessWidget extends Area {
 
   //@override
   copied(id?: string): StatelessWidget {
-    const retval = new StatelessWidget(id ?? this.id, this.parent, {
-      ...this._style,
+    const retval = new StatelessWidget({
+      ...this.buildOption(),
+      id: id ?? `${this.id}-copy`,
+      copiedFrom: this,
     });
     return retval;
+  }
+
+  addChild(child: StatelessWidget) {
+    child.parent = this;
+    this.children.push(child);
+    console.log("Added child : ", child.id);
+    Store.sortWidgets();
+    return this;
+  }
+
+  addChildren(...children: StatelessWidget[]) {
+    children.forEach(this.addChild.bind(this));
+  }
+
+  async deleteChild(child: StatelessWidget) {
+    if (!this.children.some((c) => c.id === child.id)) {
+      error("Cannot find child : ", { child });
+    }
+    return child.delete();
+  }
+
+  async deleteAllChildren() {
+    return Promise.all(this.children.map((c) => c.delete()));
+  }
+
+  async delete() {
+    return new Promise(async (resolve) => {
+      return this.deleteAllChildren().then(() => {
+        if (this.inputOption?.onDestroyWithCleanup) {
+          this.inputOption.onDestroyWithCleanup(this, () => {
+            Store.removeWidgetFromList(this);
+            if (this.parent) {
+              this.parent.children = this.parent.children.filter(
+                (c) => c.id !== this.id
+              );
+            }
+            resolve(this);
+          });
+          return;
+        }
+        if (this.inputOption?.onDestroy) {
+          this.inputOption.onDestroy(this);
+        }
+        Store.removeWidgetFromList(this);
+        if (this.parent) {
+          this.parent.children = this.parent.children.filter(
+            (c) => c.id !== this.id
+          );
+        }
+        resolve(this);
+      });
+    });
   }
 }
