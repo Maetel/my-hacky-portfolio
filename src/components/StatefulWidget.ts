@@ -29,6 +29,17 @@ export default class StatefulWidget extends StatelessWidget {
     }
     this._state = { ...this._state, ...state };
   }
+
+  // @override
+  copied(id?: string) {
+    const retval = new StatefulWidget(
+      id ?? this.id,
+      this.parent,
+      { ...this.style },
+      { ...this.state }
+    );
+    return retval;
+  }
 }
 
 export const asStateful = (widget: StatelessWidget) => {

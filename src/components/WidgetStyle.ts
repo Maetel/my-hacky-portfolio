@@ -3,6 +3,8 @@ import { AreaInputSize } from "./Area";
 
 export default interface WidgetStyle {
   size?: AreaInputSize;
+  verAlign?: "top" | "center" | "bottom";
+  horAlign?: "left" | "center" | "right";
   backgroundColor?: string | CanvasGradient | CanvasPattern;
   borderWidth?: number;
   borderRadius?: number;
@@ -10,6 +12,7 @@ export default interface WidgetStyle {
   visible?: boolean;
   zIndex?: number;
   grabbable?: boolean;
+  position?: "relative" | "global";
 
   // TODOS
   opacity?: number;
@@ -29,7 +32,6 @@ export default interface WidgetStyle {
     | "grabbing"
     | "zoom-in"
     | "zoom-out";
-  position?: "absolute" | "relative" | "fixed";
 
   padding?: string;
   margin?: string;

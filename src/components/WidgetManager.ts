@@ -2,10 +2,18 @@ import { notNullish } from "@/utils";
 import StatelessWidget from "./StatelessWidget";
 import WidgetStyle from "./WidgetStyle";
 
+class ManagedWidget extends StatelessWidget {
+  _addOrder: number;
+}
+
 export default class WidgetManager {
+  static addedOrder = 0;
   static highestZ: number = 0;
   static updateIds: string[] = [];
-  static widgets: StatelessWidget[] = [];
+  private static _widgets: ManagedWidget[] = [];
+  static get widgets() {
+    return WidgetManager._widgets as StatelessWidget[];
+  }
 
   static push(...args: StatelessWidget[]) {
     // console.log("pushed : ", args[0].id, " n : ", args.length);
@@ -15,12 +23,14 @@ export default class WidgetManager {
   }
 
   static _push(widget: StatelessWidget) {
+    const managed: ManagedWidget = widget as ManagedWidget;
+    managed._addOrder = WidgetManager.addedOrder++;
     widget._style.zIndex = widget._style.zIndex ?? WidgetManager.highestZ;
     WidgetManager.highestZ = Math.max(
       widget._style.zIndex,
       WidgetManager.highestZ
     );
-    WidgetManager.widgets.push(widget);
+    WidgetManager._widgets.push(managed);
     WidgetManager.sort();
   }
 
@@ -30,30 +40,34 @@ export default class WidgetManager {
       | ((a: StatelessWidget, b: StatelessWidget) => number) = "zIndex"
   ) {
     if (order === "zIndex") {
-      WidgetManager.widgets.sort((a, b) => a._style.zIndex - b._style.zIndex);
+      WidgetManager._widgets.sort((a, b) => {
+        if (a._style.zIndex - b._style.zIndex === 0) {
+          return a._addOrder - b._addOrder;
+        }
+        return a._style.zIndex - b._style.zIndex;
+      });
     } else {
-      WidgetManager.widgets.sort(order);
+      WidgetManager._widgets.sort(order);
     }
   }
 
   static stful() {
-    return WidgetManager.widgets.filter((w) => w.state !== null);
+    return WidgetManager._widgets.filter((w) => w.state !== null);
   }
 
   static stless() {
-    return WidgetManager.widgets.filter((w) => w.state === null);
+    return WidgetManager._widgets.filter((w) => w.state === null);
   }
 
   static resetWindowSize() {
-    WidgetManager.widgets.forEach((widget) => {
+    WidgetManager._widgets.forEach((widget) => {
       const { clientHeight, clientWidth } = document.documentElement;
-      widget.setScreenHeight(clientHeight);
-      widget.setScreenWidth(clientWidth);
+      widget.updateScreenSize();
     });
   }
 
   static of(x: number, y: number): StatelessWidget | null {
-    const widgets = WidgetManager.widgets;
+    const widgets = WidgetManager._widgets;
     for (let i = widgets.length - 1; i >= 0; i--) {
       const widget = widgets[i];
       if (widget.contains(x, y)) {
@@ -64,19 +78,21 @@ export default class WidgetManager {
   }
 
   static id(id: string): StatelessWidget | null {
-    return WidgetManager.widgets.find((widget) => widget.id === id) ?? null;
+    return WidgetManager._widgets.find((widget) => widget.id === id) ?? null;
   }
 
   static pop(): StatelessWidget | null {
-    return WidgetManager.widgets.pop() ?? null;
+    return WidgetManager._widgets.pop() ?? null;
   }
 
   static remove(id: string): StatelessWidget | null {
-    const index = WidgetManager.widgets.findIndex((widget) => widget.id === id);
+    const index = WidgetManager._widgets.findIndex(
+      (widget) => widget.id === id
+    );
     if (index === -1) {
       return null;
     }
-    return WidgetManager.widgets.splice(index, 1)[0];
+    return WidgetManager._widgets.splice(index, 1)[0];
   }
 
   static delete = WidgetManager.remove;

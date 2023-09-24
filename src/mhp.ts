@@ -23,7 +23,6 @@ import * as s from "./styles";
 import { defaultCommands } from "./class/Command";
 import VERSION from "./VERSION";
 import BasicCanvas from "./components/BasicCanvas";
-import { Length } from "./class/StyleLength";
 import StatelessWidget from "./components/StatelessWidget";
 import WidgetManager from "./components/WidgetManager";
 import { background } from "./components/WidgetStyle";
@@ -92,6 +91,7 @@ class MHPCanvas extends BasicCanvas {
     this.setHeight(this.height);
     this.setWidth(this.width);
     WidgetManager.resetWindowSize();
+    this.redraw();
     // this.run();
   }
 
@@ -103,14 +103,22 @@ class MHPCanvas extends BasicCanvas {
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
 
+    const prev = this.pointerMoveOn;
     this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
+    const next = this.pointerMoveOn;
+    if (prev !== next) {
+      this.handleStateChange("onPointerMove", prev, next);
+    }
 
     //find in reverse order
     if (this.isDragging) {
+      // console.log("drag");
       this.handleDrag();
     } else {
+      // console.log("not drag");
       this.canvas.style.cursor =
         this.pointerMoveOn?.style?.hover?.cursor ?? "default";
+      // this.redraw();
     }
   }
   // input event overrides
@@ -120,6 +128,7 @@ class MHPCanvas extends BasicCanvas {
 
   // @override
   onPointerDown(e: MouseEvent) {
+    // console.log({ widgets });
     super.onPointerDown(e);
     this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
     // console.log({ down: this.pointerDownOn?.style?.cursor });
@@ -135,6 +144,7 @@ class MHPCanvas extends BasicCanvas {
     this.pointerMoveOn = null; // mobile
     const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
     this.handlePointerUp(pointerUpOn);
+    this.redraw();
   }
 
   // @override
@@ -174,7 +184,7 @@ class MHPCanvas extends BasicCanvas {
       if (!stful.hasAnimation(animId)) {
         this.addAnimation({
           widget: stful,
-          duration: 1000,
+          duration: 2000,
           everyFrame: (elapsed: number, dt: number) => {
             const FPS = 1000 / dt;
             // console.log({ elapsed });
@@ -191,9 +201,14 @@ class MHPCanvas extends BasicCanvas {
 
     if (clicked.id === "third") {
       const stful = asStateful(clicked);
-      const orgLeft = stful.left as number;
-      const orgWidth = stful.width as number;
-      const orgRight = stful.right as number;
+      const {
+        x: orgLeft,
+        y: orgTop,
+        w: orgWidth,
+        h: orgHeight,
+      } = stful.xywhRelative;
+      console.log({ thirdLrwh: stful.lrwh });
+      const orgStyle = stful.style;
 
       const jobId = "untiljob";
       const jobTypeId = "untiljobType";
@@ -203,22 +218,24 @@ class MHPCanvas extends BasicCanvas {
           if (!prev) {
             return "expand";
           }
-          return prev === "expand" ? "swing" : "expand";
+          // return prev === "expand" ? "swing" : "expand";
+          return "expand";
         });
 
-        const duration_ms = 2000;
+        const duration_ms = 3000;
         const onEveryFrame = (elapsed) => {
           const untilAnimation: "expand" | "swing" = Store.get(jobTypeId);
 
-          const dx = Math.sin(elapsed / 100) * 100;
+          const dx = Math.sin(elapsed / 200) * 100;
           switch (untilAnimation) {
             case "expand":
-              stful.left = toPx(orgLeft - dx);
-              stful.setWidth(toPx(orgWidth + 2 * dx));
+              stful.setLeftRelative(toPx(orgLeft - dx));
+              // stful.setWidth(toPx(orgWidth + 2 * dx));
+              // stful.setTop(toPx(orgTop + 50 + dx * 0.5));
+              // stful.setHeight(toPx(orgTop - dx));
               break;
             case "swing":
-              stful.left = toPx(orgLeft + dx);
-              stful.right = toPx(orgRight + dx);
+              stful.setLeftRelative(toPx(orgLeft + dx));
               break;
           }
 
@@ -226,8 +243,9 @@ class MHPCanvas extends BasicCanvas {
         };
         const onUntiljobFinish = (elapsed) => {
           console.log("until onFinish, Elapsed : ", elapsed);
-          stful.left = toPx(orgLeft);
-          stful.setWidth(toPx(orgWidth));
+          // stful.setLeft(toPx(orgLeft));
+          // stful.setWidth(toPx(orgWidth));
+          stful.style = orgStyle;
           switch (Store.get(jobTypeId)) {
             case "expand":
               stful.style.backgroundColor = "#a9039c";
@@ -307,8 +325,8 @@ class MHPCanvas extends BasicCanvas {
 
     if (this.pointerDownOn.style?.grabbable) {
       this.pointerDownOn.move(dx, dy);
-      this.redraw();
     }
+    this.redraw();
   }
 
   ////////////////////////////////////////////////////////
@@ -333,49 +351,62 @@ class MHPCanvas extends BasicCanvas {
     return false;
   }
 
+  _renderWidget(widget: StatelessWidget) {
+    // 1. render self
+    if (!widget.style.visible) {
+      return;
+    }
+    const { left, top, width, height, right, bottom } = widget.lrwh;
+    // console.log({ left, width, right });
+    // console.log({ top, height, bottom });
+
+    const hovered = this.pointerMoveOn?.id === widget.id;
+    const pointerDown = this.pointerDownOn?.id === widget.id;
+
+    let style = { ...widget.style };
+    if (pointerDown && widget.style.mouseDown) {
+      style = { ...style, ...widget.style.mouseDown };
+    } else if (hovered && widget.style.hover) {
+      style = { ...style, ...widget.style.hover };
+      // console.log({ hoverStyle: style });
+    }
+
+    if (width === 0 || height === 0) {
+      return;
+    }
+
+    const backgroundColor = background(style.backgroundColor, style.opacity);
+    // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
+    const drawBorder = style.borderColor && style.borderWidth;
+    const prev = {
+      fillStyle: this.ctx.fillStyle,
+      strokeStyle: this.ctx.strokeStyle,
+      lineWidth: this.ctx.lineWidth,
+    };
+
+    this.ctx.fillStyle = backgroundColor;
+    this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 0);
+    this.ctx.fill();
+    if (drawBorder) {
+      this.ctx.strokeStyle = style.borderColor;
+      this.ctx.lineWidth = style.borderWidth ?? 2;
+      this.ctx.stroke();
+    }
+
+    //restore
+    this.ctx.fillStyle = prev.fillStyle;
+    this.ctx.strokeStyle = prev.strokeStyle;
+    this.ctx.lineWidth = prev.lineWidth;
+
+    // 2. render children
+    // widget.children.forEach((child) => this._renderWidget(child));
+  }
+
   render() {
     // console.log("Rendered");
     widgets.forEach((widget) => {
-      if (!widget.style.visible) {
-        return;
-      }
-      const { left, top, width, height, bottom } = widget.xywh;
-      const hovered = this.pointerMoveOn?.id === widget.id;
-      const pointerDown = this.pointerDownOn?.id === widget.id;
-
-      let style = { ...widget.style };
-      if (pointerDown && widget.style.mouseDown) {
-        style = { ...style, ...widget.style.mouseDown };
-      } else if (hovered && widget.style.hover) {
-        style = { ...style, ...widget.style.hover };
-      }
-
-      if (width === 0 || height === 0) {
-        return;
-      }
-
-      const backgroundColor = background(style.backgroundColor, style.opacity);
-      // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
-      const drawBorder = style.borderColor && style.borderWidth;
-      const prev = {
-        fillStyle: this.ctx.fillStyle,
-        strokeStyle: this.ctx.strokeStyle,
-        lineWidth: this.ctx.lineWidth,
-      };
-
-      this.ctx.fillStyle = backgroundColor;
-      this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 0);
-      this.ctx.fill();
-      if (drawBorder) {
-        this.ctx.strokeStyle = style.borderColor;
-        this.ctx.lineWidth = style.borderWidth ?? 2;
-        this.ctx.stroke();
-      }
-
-      //restore
-      this.ctx.fillStyle = prev.fillStyle;
-      this.ctx.strokeStyle = prev.strokeStyle;
-      this.ctx.lineWidth = prev.lineWidth;
+      // this call will recursively render all children
+      this._renderWidget(widget);
     });
   }
 
@@ -399,6 +430,12 @@ class MHPCanvas extends BasicCanvas {
   }
   logOnce(id: number, ...args: any[]) {
     this.doOnce(() => console.log(...args), id);
+  }
+
+  handleStateChange(key: string, prev: any, next: any) {
+    // TODO : handle state change
+    // console.log("Handle state change : ", key);
+    this.redraw();
   }
 
   // @override
@@ -491,21 +528,21 @@ class MHPCanvas extends BasicCanvas {
 
 function initWidgets() {
   // console.log("called");
-  const background = new StatelessWidget("background", null, {
-    size: {
-      top: new Length(0),
-      left: new Length(0),
-      width: new Length(1),
-      height: new Length(1),
-    },
-    backgroundColor: "#dfdfdf",
-  });
+  // const background = new StatelessWidget("background", null, {
+  //   size: {
+  //     top: 0,
+  //     left: 0,
+  //     width: 1,
+  //     height: 1,
+  //   },
+  //   backgroundColor: "#dfdfdf",
+  // });
   const first = new StatelessWidget("first", null, {
     size: {
-      top: new Length(0.25),
-      left: new Length(0.25),
-      width: new Length(0.5),
-      height: new Length(0.5),
+      left: "100px",
+      width: 0.8,
+      top: 0.1,
+      height: 0.5,
     },
     backgroundColor: "#ff0000",
     borderRadius: 30,
@@ -524,10 +561,10 @@ function initWidgets() {
   });
   const second = new StatefulWidget("second", first, {
     size: {
-      left: new Length(0.5),
-      top: new Length(0.5),
-      width: new Length(0.45),
-      height: new Length(0.45),
+      left: "100px",
+      bottom: "100px",
+      width: "250px",
+      height: "350px",
     },
     backgroundColor: "#00ff00",
     // backgroundColor: "transparent",
@@ -535,15 +572,16 @@ function initWidgets() {
   });
   const third = new StatefulWidget("third", second, {
     size: {
-      left: new Length(0.1),
-      top: new Length(0.1),
-      width: new Length(0.4),
-      height: new Length(0.28),
+      left: "100px",
+      top: 0.3,
+      width: "100px",
+      height: 0.4,
     },
     backgroundColor: "#0000ff",
-    opacity: 0.7,
+    opacity: 0.5,
   });
   // WidgetManager.push(background, first, second);
   WidgetManager.push(first, second, third);
+  // WidgetManager.push(first);
   console.log("Widgets : ", widgets);
 }

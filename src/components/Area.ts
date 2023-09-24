@@ -1,347 +1,494 @@
-import StyleLength, { Length } from "@/class/StyleLength";
 import { KeyCode } from "../types";
 import {
+  clientHeight,
+  clientWidth,
   hasNullish,
   isNullish,
   notNullish,
+  parsePx,
   strPercentToFloat,
   strPxToFloat,
   toPx,
 } from "../utils";
 import error from "@/class/IError";
 
-interface LengthElement {}
-interface HorizontalElement extends LengthElement {}
-interface VerticalElement extends LengthElement {}
-interface AreaInputHorLengths extends HorizontalElement {
-  left?: Length; // ratio | % | px
-  right?: Length; // ratio | % | px
-  width?: Length; // ratio | % | px
-}
-interface AreaInputVerLengths extends VerticalElement {
-  top?: Length; // ratio | % | px
-  bottom?: Length; // ratio | % | px
-  height?: Length; // ratio | % | px
-}
-export interface AreaInputSize
-  extends AreaInputHorLengths,
-    AreaInputVerLengths {}
-interface AreaHorLengths extends HorizontalElement {
-  left: StyleLength;
-  right: StyleLength;
-  width: StyleLength;
-}
-interface AreaVerLengths extends VerticalElement {
-  top: StyleLength;
-  bottom: StyleLength;
-  height: StyleLength;
-}
-interface AreaSize extends AreaHorLengths, AreaVerLengths {}
+type AreaLength = {
+  start: number | string;
+  length: number | string;
+  align: AreaAlign;
+};
 
-function inputSizeToAreaSize<
-  T extends AreaInputHorLengths | AreaInputVerLengths
->(screenBasePx: number, inputSizes: T): AreaHorLengths | AreaVerLengths {
-  if (Object.values(inputSizes).every((e) => e.isStyleLength())) {
-    return inputSizes as AreaHorLengths | AreaVerLengths;
+export const AreaAlignType = {
+  left: 1,
+  top: 1,
+  right: 2,
+  bottom: 2,
+  center: 3,
+} as const;
+
+export type AreaAlign = keyof typeof AreaAlignType;
+
+type AreaHorL = {
+  left?: number | string;
+  width?: number | string;
+  right?: null;
+};
+type AreaHorR = {
+  left?: null;
+  right?: number | string;
+  width?: number | string;
+};
+type AreaVerT = {
+  top?: number | string;
+  bottom?: null;
+  height?: number | string;
+};
+type AreaVerB = {
+  top?: null;
+  bottom?: number | string;
+  height?: number | string;
+};
+export type AreaInputSize = (AreaHorL | AreaHorR) & (AreaVerT | AreaVerB);
+
+type AreaSizeInputHorType = "AreaHorL" | "AreaHorR";
+type AreaSizeInputVerType = "AreaVerT" | "AreaVerB";
+type AreaSizeInputType = {
+  hor: AreaSizeInputHorType;
+  ver: AreaSizeInputVerType;
+};
+const getAreaSizeInputType = (size: AreaInputSize): AreaSizeInputType => {
+  const retval = {} as AreaSizeInputType;
+  // debugger;
+  const n = notNullish;
+  if (n(size.left) && n(size.width)) {
+    retval.hor = "AreaHorL";
+  }
+  // console.log({ right: size.right });
+  if (n(size.right) && n(size.width)) {
+    retval.hor = "AreaHorR";
+  }
+  if (n(size.top) && n(size.height)) {
+    retval.ver = "AreaVerT";
+  }
+  if (n(size.bottom) && n(size.height)) {
+    retval.ver = "AreaVerB";
   }
 
-  const copied = { ...inputSizes };
-  const keys = Object.keys(copied);
-  const styles = keys.map((key) => {
-    const inputSize: Length = copied[key];
-    if (inputSize.isNullish()) {
-      return null;
-    }
-    const retval = copied[key].isStyleLength()
-      ? copied[key]
-      : new StyleLength(screenBasePx, inputSize.length);
-    return retval;
-  });
-  const contains3StyleLengths =
-    styles.reduce((prev, cur) => {
-      return prev + (cur?.isStyleLength() ? 1 : 0);
-    }, 0) === 3;
-  if (styles.every((s) => s !== null) && contains3StyleLengths) {
-    //early return if just updating one element
-    const retval = {};
-    keys.forEach((key, i) => {
-      retval[key] = styles[i];
-    });
-    return retval as AreaHorLengths | AreaVerLengths;
-  }
-
-  // initialize
-  if (styles.filter((e) => e !== null).length !== 2) {
-    error("Input size must have 2 non-null elements : ", { copied });
-  }
-  const nullIdx = styles.findIndex((e) => e === null);
-
-  let px = null;
-  if (nullIdx === 0) {
-    // null : left or top
-    px = styles[1].px - styles[2].px;
-    // console.log("0 : ", px);
-  }
-
-  if (nullIdx === 1) {
-    // null : right or bottom
-    px = styles[0].px + styles[2].px;
-    // console.log("1 : ", px);
-  }
-
-  if (nullIdx === 2) {
-    // null : width or height
-    px = styles[1].px - styles[0].px;
-    // console.log("2 : ", px);
-  }
-
-  if (isNullish(px)) {
-    error("Px cannot be nullish : ", { px, copied });
-  }
-
-  styles[nullIdx] = new StyleLength(screenBasePx, `${px}px`);
-  const retval = {};
-  keys.forEach((key, i) => {
-    retval[key] = styles[i];
-  });
-  return retval as AreaHorLengths | AreaVerLengths;
-}
+  return retval;
+};
 
 export class Area {
-  horStyle: AreaHorLengths;
-  verStyle: AreaVerLengths;
-  screenWidth: number; //px
-  screenHeight: number; //px
-
+  parent: Area | null;
+  children: Area[] = [];
+  // parentHorSize: AreaLength; // screenWidth if parent is null
+  // parentVerSize: AreaLength; // screenHeight if parent is null
+  _width: number; // screenwidth
+  _height: number; // screenheight
+  horSize: AreaLength = {} as AreaLength;
+  verSize: AreaLength = {} as AreaLength;
+  areaType: AreaSizeInputType;
   constructor(
-    screenWidth: number,
-    screenHeight: number,
-    styles: AreaInputSize
+    parent: Area | null = null,
+    size: AreaInputSize | "full" = "full",
+    verAlign: AreaAlign = "top",
+    horAlign: AreaAlign = "left"
   ) {
-    this.screenWidth = screenWidth;
-    this.screenHeight = screenHeight;
-
-    // when right and bottom, inverts
-    let right = new Length();
-    let bottom = new Length();
-    if (styles.right) {
-      const rightPx =
-        screenWidth - new StyleLength(screenWidth, styles.right.length).px;
-      console.log({ rightPx });
-      right = new StyleLength(screenWidth, `${rightPx}px`);
-      console.log({ right });
+    this.parent = parent;
+    if (parent) {
+      parent.children.push(this);
     }
-    if (styles.bottom) {
-      const bottomPx =
-        screenHeight - new StyleLength(screenHeight, styles.bottom.length).px;
-      console.log({ bottomPx });
-      bottom = new StyleLength(screenHeight, `${bottomPx}px`);
-      console.log({ bottom });
-    }
-    const horInputs = {
-      left: styles.left ?? new Length(),
-      right,
-      width: styles.width ?? new Length(),
-    };
-    const verInputs = {
-      top: styles.top ?? new Length(),
-      bottom,
-      height: styles.height ?? new Length(),
-    };
-    const horSizes = inputSizeToAreaSize(
-      screenWidth,
-      horInputs
-    ) as AreaHorLengths;
-    const verSizes = inputSizeToAreaSize(
-      screenHeight,
-      verInputs
-    ) as AreaVerLengths;
-
-    this.horStyle = horSizes;
-    this.verStyle = verSizes;
+    this.updateScreenSize();
+    this.horSize.align = horAlign;
+    this.verSize.align = verAlign;
+    this.setSize(
+      size === "full"
+        ? { left: 0, width: 1, top: 0, height: 1, right: null, bottom: null }
+        : size
+    );
+    // console.log({ hor: this.horSize, ver: this.verSize });
   }
 
-  protected setStyle(style: AreaInputSize) {
-    const horInputs = {
-      left: style.left ?? this.horStyle.left,
-      right: style.right ?? this.horStyle.right,
-      width: style.width ?? this.horStyle.width,
-    } as AreaInputHorLengths;
-    const verInputs = {
-      top: style.top ?? this.verStyle.top,
-      bottom: style.bottom ?? this.verStyle.bottom,
-      height: style.height ?? this.verStyle.height,
-    } as AreaInputVerLengths;
-    // console.log({ horInputs, verInputs });
-    const horSizes = inputSizeToAreaSize(
-      this.screenWidth,
-      horInputs
-    ) as AreaHorLengths;
-    const verSizes = inputSizeToAreaSize(
-      this.screenHeight,
-      verInputs
-    ) as AreaVerLengths;
-
-    if (horSizes.right.px < horSizes.left.px || horSizes.width.px < 0) {
-      horSizes.right = horSizes.left.copied();
-      horSizes.width = new StyleLength(this.screenWidth, "0px");
-    }
-    if (verSizes.bottom.px < verSizes.top.px || verSizes.height.px < 0) {
-      verSizes.bottom = verSizes.top.copied();
-      verSizes.height = new StyleLength(this.screenHeight, "0px");
-    }
-    this.horStyle = horSizes;
-    this.verStyle = verSizes;
+  updateScreenSize() {
+    this._width = clientWidth();
+    this._height = clientHeight();
   }
 
-  get xywh(): {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-    right: number;
-    bottom: number;
-  } {
+  // left, top based px
+  paddingL(): number {
+    return this.parent?.left ?? 0;
+  }
+  paddingR(): number {
+    return this.parent?.right ?? clientWidth();
+  }
+  paddingT(): number {
+    return this.parent?.top ?? 0;
+  }
+  paddingB(): number {
+    return this.parent?.bottom ?? clientHeight();
+  }
+
+  // left & top
+  padding(): { left: number; right: number; top: number; bottom: number } {
     return {
-      left: this.left as number,
-      top: this.top as number,
-      width: this.width as number,
-      height: this.height as number,
-      right: this.right as number,
-      bottom: this.bottom as number,
+      left: this.paddingL(),
+      right: this.paddingR(),
+      top: this.paddingT(),
+      bottom: this.paddingB(),
     };
   }
-  get xywhRatio(): {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-    right: number;
-    bottom: number;
-  } {
-    const retval = { ...this.xywh };
-    retval.left /= this.screenWidth;
-    retval.right /= this.screenWidth;
-    retval.width /= this.screenWidth;
 
-    retval.top /= this.screenHeight;
-    retval.bottom /= this.screenHeight;
-    retval.height /= this.screenHeight;
-    return retval;
-  }
-  get left() {
-    return this.horStyle.left.px as number;
-  }
-  get right() {
-    return this.horStyle.right.px;
-  }
-  get width() {
-    return this.horStyle.width.px;
-  }
-  get top() {
-    return this.verStyle.top.px;
-  }
-  get bottom() {
-    // console.log({ verstyleBottom: this.verStyle.bottom.px });
-    return this.verStyle.bottom.px;
-  }
-  get height() {
-    return this.verStyle.height.px;
-  }
-
-  setScreenHeight(screenHeight: number) {
-    this.screenHeight = screenHeight;
-    Object.keys(this.verStyle).forEach((key) => {
-      //update screen height
-      this.verStyle[key].screenPx = screenHeight;
-    });
-  }
-
-  setScreenWidth(screenWidth: number) {
-    this.screenWidth = screenWidth;
-    Object.keys(this.horStyle).forEach((key) => {
-      //update screen width
-      this.horStyle[key].screenPx = screenWidth;
-    });
-  }
-
-  set top(top: number | string) {
-    this.setStyle({
-      top: new Length(top),
-      height: new Length(),
-    });
-  }
-
-  set bottom(bottom: number | string) {
-    this.setStyle({
-      height: new Length(),
-      bottom: new Length(bottom),
-    });
-  }
-
-  set left(left: number | string) {
-    this.setStyle({ left: new Length(left), width: new Length() });
-  }
-
-  set right(right: number | string) {
-    this.setStyle({ right: new Length(right), width: new Length() });
-  }
-
-  setWidth(width: number | string, align: "left" | "right" = "left") {
+  get left(): number {
+    const { start, length, align } = this.horSize;
+    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    const startPx = this.horPx(start);
+    const lengthPx = this.horPx(length);
+    // console.log({ startPx, lengthPx, pl, pr, pt, pb });
     switch (align) {
       case "left":
-        this.setStyle({ width: new Length(width), right: new Length() });
-        break;
+        return pl + startPx;
+      case "center":
+        return (pl + pr) * 0.5 + startPx - lengthPx * 0.5;
       case "right":
-        this.setStyle({ width: new Length(width), left: new Length() });
+        return pr - startPx - lengthPx;
+    }
+    error("invalid left", { horSize: this.horSize });
+  }
+  get leftRelative(): number {
+    return this.left - this.paddingL();
+  }
+  get right(): number {
+    const { start, length, align } = this.horSize;
+    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    const startPx = this.horPx(start);
+    const lengthPx = this.horPx(length);
+    switch (align) {
+      case "left":
+        return pl + startPx + lengthPx;
+      case "center":
+        return (pl + pr) * 0.5 + startPx + lengthPx * 0.5;
+      case "right":
+        return pr - startPx;
+    }
+    error("invalid right", { horSize: this.horSize });
+  }
+  get rightRelative(): number {
+    return this.right - this.paddingL();
+  }
+  get width(): number {
+    const { length } = this.horSize;
+    return this.horPx(length);
+  }
+  get top(): number {
+    const { start, length, align } = this.verSize;
+    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    const startPx = this.verPx(start);
+    const lengthPx = this.verPx(length);
+    switch (align) {
+      case "top":
+        return pt + startPx;
+      case "center":
+        return (pt + pb) * 0.5 + startPx - lengthPx * 0.5;
+      case "bottom":
+        return pb - startPx - lengthPx;
+    }
+    error("invalid top", { verSize: this.verSize });
+  }
+  get topRelative(): number {
+    return this.top - this.paddingT();
+  }
+  get bottom(): number {
+    const { start, length, align } = this.verSize;
+    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    const startPx = this.verPx(start);
+    const lengthPx = this.verPx(length);
+    switch (align) {
+      case "top":
+        return pt + startPx + lengthPx;
+      case "center":
+        return (pt + pb) * 0.5 + startPx + lengthPx * 0.5;
+      case "bottom":
+        return pb - startPx;
+    }
+    error("invalid bottom", { verSize: this.verSize });
+  }
+  get bottomRelative(): number {
+    return this.bottom - this.paddingT();
+  }
+  get height(): number {
+    const { length } = this.verSize;
+    const baseVer = this.parent?.height ?? this._height;
+    return parsePx(baseVer, length);
+  }
+
+  protected horPx(number: number | string) {
+    return parsePx(this.parent?.width ?? this._width, number);
+  }
+
+  protected verPx(number: number | string) {
+    return parsePx(this.parent?.height ?? this._height, number);
+  }
+
+  forChildren(
+    callback: (child: Area, index: number, children: Area[]) => void
+  ) {
+    this.children.forEach(callback);
+  }
+
+  moveX(dx: number | string) {
+    const s = this.horPx(this.horSize.start);
+    const direction = this.horSize.align === "left" ? 1 : -1;
+    const d = this.horPx(toPx(dx)) * direction;
+    this.horSize.start = toPx(s + d);
+  }
+
+  moveY(dy: number | string) {
+    const s = this.verPx(this.verSize.start);
+    const direction = this.verSize.align === "top" ? 1 : -1;
+    const d = this.verPx(toPx(dy)) * direction;
+    // console.log({ s, dy, d });
+    this.verSize.start = toPx(s + d);
+  }
+
+  move(dx: number | string, dy: number | string) {
+    this.moveX(dx);
+    this.moveY(dy);
+  }
+
+  setSize(size: AreaInputSize, verAlign?: AreaAlign, horAlign?: AreaAlign) {
+    const areaType = getAreaSizeInputType(size);
+    if (verAlign) {
+      this.verSize.align = verAlign;
+    }
+    if (horAlign) {
+      this.horSize.align = horAlign;
+    }
+
+    // console.log({ size, areaType });
+
+    switch (areaType.hor) {
+      case "AreaHorL":
+        this.horSize = {
+          ...this.horSize,
+          start: size.left,
+          length: size.width,
+        };
+        break;
+      case "AreaHorR":
+        this.horSize = {
+          ...this.horSize,
+          start: size.right,
+          length: size.width,
+        };
+        break;
+    }
+    switch (areaType.ver) {
+      case "AreaVerT":
+        this.verSize = {
+          ...this.verSize,
+          start: size.top,
+          length: size.height,
+        };
+        break;
+      case "AreaVerB":
+        this.verSize = {
+          ...this.verSize,
+          start: size.bottom,
+          length: size.height,
+        };
         break;
     }
   }
 
-  setHeight(height: number | string, align: "top" | "bottom" = "top") {
-    switch (align) {
-      case "top":
-        this.setStyle({ height: new Length(height), bottom: new Length() });
+  // force align to left
+  setLeftRelative(
+    left: number | string,
+    width: number | string | "update" | "keep" = "keep"
+  ) {
+    let length = this.horSize.length;
+    switch (width) {
+      case "keep":
         break;
-      case "bottom":
-        this.setStyle({ height: new Length(height), top: new Length() });
+      case "update":
+        length = this.horPx(this.horSize.length) + this.horPx(left);
         break;
+      default:
+        length = width;
     }
+    this.horSize = {
+      start: left,
+      length,
+      align: "left",
+    };
+  }
+
+  // force align to right
+  setRightRelative(
+    right: number | string,
+    width: number | string | "update" | "keep" = "keep"
+  ) {
+    let length = this.horSize.length;
+    switch (width) {
+      case "keep":
+        break;
+      case "update":
+        length = this.horPx(this.horSize.length) + this.horPx(right);
+        break;
+      default:
+        length = width;
+    }
+    this.horSize = {
+      start: right,
+      length,
+      align: "right",
+    };
+  }
+
+  // force align to top
+  setTopRelative(
+    top: number | string,
+    height: number | string | "update" | "keep" = "keep"
+  ) {
+    let length = this.verSize.length;
+    switch (height) {
+      case "keep":
+        break;
+      case "update":
+        length = this.verPx(this.verSize.length) + this.verPx(top);
+        break;
+      default:
+        length = height;
+    }
+    this.verSize = {
+      start: top,
+      length,
+      align: "top",
+    };
+  }
+
+  // force align to bottom
+  setBottomRelative(
+    bottom: number | string,
+    height: number | string | "update" | "keep" = "keep"
+  ) {
+    let length = this.verSize.length;
+    switch (height) {
+      case "keep":
+        break;
+      case "update":
+        length = this.verPx(this.verSize.length) + this.verPx(bottom);
+        break;
+      default:
+        length = height;
+    }
+    this.verSize = {
+      start: bottom,
+      length,
+      align: "bottom",
+    };
+  }
+
+  setWidth(width: number | string) {
+    this.horSize.length = width;
+  }
+
+  setHeight(height: number | string) {
+    this.verSize.length = height;
+  }
+
+  setHorAlign(align: AreaAlign) {
+    this.horSize.align = align;
+  }
+
+  setVerAlign(align: AreaAlign) {
+    this.verSize.align = align;
   }
 
   contains = (x: number, y: number) => this.isInArea(x, y);
 
   isInArea(x: number, y: number) {
-    const left = this.left as number;
-    const right = this.right as number;
-    const top = this.top as number;
-    const bottom = this.bottom as number;
+    const left = this.left;
+    const right = this.right;
+    const top = this.top;
+    const bottom = this.bottom;
     return top <= y && y <= bottom && left <= x && x <= right;
   }
 
   copied() {
-    return new Area(this.screenWidth, this.screenHeight, {
-      ...this.horStyle,
-      ...this.verStyle,
-    });
+    const retval = new Area(this.parent);
+    retval.horSize = { ...this.horSize };
+    retval.verSize = { ...this.verSize };
+    return retval;
   }
 
-  moveX(dx: number) {
-    this.horStyle.left.length = toPx(this.horStyle.left.px + dx);
-    this.horStyle.right.length = toPx(this.horStyle.right.px + dx);
+  get xywh() {
+    return {
+      x: this.left,
+      y: this.top,
+      w: this.width,
+      h: this.height,
+    };
+  }
+  get xywhRelative() {
+    return {
+      x: this.leftRelative,
+      y: this.topRelative,
+      w: this.width,
+      h: this.height,
+    };
   }
 
-  moveY(dy: number) {
-    this.verStyle.top.length = toPx(this.verStyle.top.px + dy);
-    this.verStyle.bottom.length = toPx(this.verStyle.bottom.px + dy);
+  // global
+  get lrwh() {
+    return {
+      left: this.left,
+      right: this.right,
+      width: this.width,
+      top: this.top,
+      bottom: this.bottom,
+      height: this.height,
+    };
   }
 
-  move(dx: number, dy: number) {
-    this.moveX(dx);
-    this.moveY(dy);
+  // relative to parent
+  get lrwhRelative() {
+    return {
+      left: this.leftRelative,
+      right: this.rightRelative,
+      width: this.width,
+      top: this.topRelative,
+      bottom: this.bottomRelative,
+      height: this.height,
+    };
+  }
+
+  get xywhRatio() {
+    const retval = { ...this.xywh };
+    retval.x /= this._width;
+    retval.y /= this._height;
+    retval.w /= this._width;
+    retval.h /= this._height;
+    return retval;
+  }
+
+  get lrwhRatio() {
+    const retval = { ...this.lrwh };
+    retval.left /= this._width;
+    retval.right /= this._width;
+    retval.width /= this._width;
+    retval.top /= this._height;
+    retval.bottom /= this._height;
+    retval.height /= this._height;
+    return retval;
+  }
+
+  setHor(hor: AreaLength) {
+    this.horSize = { ...hor };
+  }
+
+  setVer(ver: AreaLength) {
+    this.verSize = { ...ver };
   }
 }
-
 export class KeyArea {
   x: number;
   y: number;

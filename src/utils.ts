@@ -1,26 +1,49 @@
+export const parsePx = (basePx: number, length: number | string) => {
+  if (typeof length === "number") {
+    return basePx * length;
+  }
+  if (typeof length === "string") {
+    const combo = parseIfCombo(basePx, length);
+    // console.log({ combo });
+    if (combo !== null) {
+      return combo;
+    }
+
+    const px = parseIfPixel(length);
+    if (px !== null) {
+      return px;
+    }
+    const percent = parseIfPercent(length);
+    if (percent !== null) {
+      return basePx * percent * 0.01;
+    }
+  }
+  throw new Error(`length is not valid. [length] = [${length}]`);
+};
 export const isPx = (string: string) => string.trim().endsWith("px");
 export const isPercent = (string: string) => string.trim().endsWith("%");
 export const parseIfPixel = (string: string) => {
   if (isPx(string)) {
-    return Number(string.trim().replace("px", ""));
+    return Number(string.replaceAll(" ", "").replace("px", ""));
   }
   return null;
 };
 export const parseIfPercent = (string: string) => {
   if (isPercent(string)) {
-    return Number(string.trim().replace("%", ""));
+    return Number(string.replaceAll(" ", "").replace("%", ""));
   }
   return null;
 };
 // 100% - 30px
 export const parseIfCombo = (basePx: number, str: string) => {
   const trimmed = str.trim();
-  if (!str.includes("%") && !str.includes("px")) {
+  if (!str.includes("%") || !str.includes("px")) {
     return null;
   }
   const splitted = trimmed.split("%");
   const percent = Number(splitted[0]);
-  const px = Number(splitted[1].trim().replace("px", ""));
+  const px = Number(splitted[1].replaceAll(" ", "").replace("px", ""));
+  // console.log({ percent, px });
   if (isNaN(percent) || isNaN(px)) {
     throw new Error("Failed to parse combo : " + str);
   }
@@ -230,3 +253,6 @@ export function deepCopy(obj: any): any {
   }
   return newObj;
 }
+
+export const clientWidth = () => document.documentElement.clientWidth;
+export const clientHeight = () => document.documentElement.clientHeight;
