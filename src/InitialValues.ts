@@ -70,6 +70,7 @@ export function initWidgets() {
       width: "100px",
       height: 0.4,
     },
+    textAlign: "right",
     backgroundColor: "#0000ff",
     opacity: 0.5,
   };
@@ -95,7 +96,12 @@ export function initWidgets() {
       },
     })
   );
-  first.children.at(0)?.addChild(new StatelessWidget({ style: thirdStyle }));
+  first.children.at(0)?.addChild(
+    new StatelessWidget({
+      text: "Hi 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20",
+      style: thirdStyle,
+    })
+  );
   const deleteButton = new StatelessWidget({
     callbacks: {
       onClick: (w) => {

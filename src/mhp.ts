@@ -236,6 +236,10 @@ class MHPCanvas extends BasicCanvas {
           // stful.setLeft(toPx(orgLeft));
           // stful.setWidth(toPx(orgWidth));
           stful.style = orgStyle;
+          console.log({
+            finalStfulLeft: stful.left,
+            orgStyleLeft: orgStyle.size.left,
+          });
           switch (Store.get(jobTypeId)) {
             case "expand":
               stful.style.backgroundColor = "#a9039c";
@@ -387,6 +391,33 @@ class MHPCanvas extends BasicCanvas {
       this.ctx.strokeStyle = style.borderColor;
       this.ctx.lineWidth = style.borderWidth ?? 2;
       this.ctx.stroke();
+    }
+
+    // render text
+    if (widget.text) {
+      const text = widget.text;
+      const fontSize = style.fontSize ?? C.System.fontSize;
+      const lineHeight = style.lineHeight ?? fontSize * 1.2;
+      const font = style.font ?? C.System.font;
+      this.ctx.font = `${fontSize}px ${font}`;
+      this.ctx.fillStyle = style.color ?? "#000";
+
+      // const { left: pl, right: pr, top: pt, bottom: pb } = widget.padding();
+      const pl = widget.left;
+      const pr = widget.right;
+      const pt = widget.top;
+      const textAlign = style.textAlign ?? "left";
+      const textWidth = this.ctx.measureText(text).width;
+      const textX =
+        textAlign === "left"
+          ? pl
+          : textAlign === "right"
+          ? pr
+          : (pl + pr) * 0.5;
+      const textY = pt + lineHeight;
+      const maxWidth = widget.width;
+      this.ctx.textAlign = textAlign;
+      this.ctx.fillText(text, textX, textY);
     }
 
     //restore

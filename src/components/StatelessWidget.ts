@@ -11,9 +11,10 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
   cursor: "default",
   opacity: 1,
   backgroundColor: "transparent",
+  font: "Arial",
   fontStyle: "normal",
   fontWeight: 400,
-  fontSize: "16px",
+  fontSize: 16,
   textAlign: "left",
   color: "black",
 };
@@ -31,6 +32,7 @@ export interface StatelessWidgetOption {
   id?: string;
   copiedFrom?: StatelessWidget;
   callbacks?: WidgetCallbacks;
+  text?: string;
 }
 
 export type WidgetCallbacks = {
@@ -51,13 +53,29 @@ export default class StatelessWidget extends Area {
   timerJob?: TimerJob;
   inputOption?: StatelessWidgetOption;
   _callbacks: WidgetCallbacks;
+  text?: string;
   constructor(option?: StatelessWidgetOption) {
-    const { parent, style, id, copiedFrom } = option;
+    const { parent, style: inputStyle, id, copiedFrom } = option;
+    const style = {
+      ...DefaultStatelessWidgetStyle,
+      ...(inputStyle ? { ...inputStyle } : {}),
+    };
+    const size = style?.size ?? {
+      left: 0,
+      top: 0,
+      width: 1,
+      height: 1,
+      right: null,
+      bottom: null,
+    };
+    style.size = size;
+
     const verAlign = style?.verAlign ?? (style?.size?.top ? "top" : "bottom");
     const horAlign = style?.horAlign ?? (style?.size?.left ? "left" : "right");
-    super(parent, style?.size ?? "full", verAlign, horAlign);
+    super(parent, style.size, verAlign, horAlign);
 
     this.addOrder = Store.getNewWidgetAddOrder();
+    this.text = option?.text ?? null;
     this.inputOption = option;
     this.parent = parent;
     this._callbacks = { ...(option?.callbacks ?? {}) };
@@ -66,10 +84,7 @@ export default class StatelessWidget extends Area {
       id ??
       `${parent?.id ?? "stls"}-${parent?.children.length ?? this.addOrder}`;
     this.copiedFrom = copiedFrom;
-    this._style = {
-      ...DefaultStatelessWidgetStyle,
-      ...(style ? { ...style } : {}),
-    };
+    this._style = { ...style };
     parent?.addChild(this);
     option?.callbacks?.onBeforeCreate?.(this);
     Store.onStatelessWidgetCreate(this);

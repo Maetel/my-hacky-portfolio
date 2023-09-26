@@ -27,14 +27,15 @@ export default interface WidgetStyle {
     | "grabbing"
     | "zoom-in"
     | "zoom-out";
+  font?: string;
+  lineHeight?: number;
+  textAlign?: "left" | "center" | "right";
+  fontSize?: number; //px
+  fontWeight?: number;
+  fontStyle?: string;
 
   // TODOS
   color?: string;
-  textAlign?: "left" | "center" | "right";
-  fontSize?: string;
-  fontWeight?: number;
-  fontStyle?: string;
-  lineHeight?: string;
 
   padding?: string;
   margin?: string;
