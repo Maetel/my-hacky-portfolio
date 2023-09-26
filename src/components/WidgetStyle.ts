@@ -12,7 +12,8 @@ export default interface WidgetStyle {
   visible?: boolean;
   zIndex?: number;
   grabbable?: boolean;
-  position?: "relative" | "global";
+  position?: "relative" | "absolute" | "global";
+  padding?: string;
   opacity?: number;
   hover?: WidgetStyle;
   pointerDown?: WidgetStyle;
@@ -33,12 +34,14 @@ export default interface WidgetStyle {
   fontSize?: number; //px
   fontWeight?: number;
   fontStyle?: string;
+  display?: "block" | "flex";
+  flexDirection?: "row" | "column";
 
   // TODOS
   color?: string;
-
-  padding?: string;
   margin?: string;
+  scrollable?: boolean; // default true, if false, same as overflow: hidden
+  showScrollBar?: boolean;
 }
 
 export const background = (

@@ -20,8 +20,10 @@ export const parsePx = (basePx: number, length: number | string) => {
   }
   throw new Error(`length is not valid. [length] = [${length}]`);
 };
-export const isPx = (string: string) => string.trim().endsWith("px");
-export const isPercent = (string: string) => string.trim().endsWith("%");
+export const isPx = (string: string) =>
+  string.trim().endsWith("px") && !string.includes("%");
+export const isPercent = (string: string) =>
+  string.trim().endsWith("%") && !string.includes("px");
 export const parseIfPixel = (string: string) => {
   if (isPx(string)) {
     return Number(string.replaceAll(" ", "").replace("px", ""));

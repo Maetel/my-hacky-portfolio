@@ -42,12 +42,13 @@ export function initWidgets() {
     },
   };
   const secondStyle: WidgetStyle = {
-    size: {
-      left: "20px",
-      width: "50%",
-      bottom: "50px",
-      height: "350px",
-    },
+    // size: {
+    // left: "20px",
+    // width: "50%",
+    // bottom: "50px",
+    // height: "1px",
+    // },
+    padding: "100px 50px 20px 100px",
     backgroundColor: "#00ff00",
     // backgroundColor: "transparent",
     opacity: 0.5,
@@ -62,17 +63,19 @@ export function initWidgets() {
       borderWidth: 3,
       borderColor: "#6666dd",
     },
+    // position: "relative",
   };
   const thirdStyle: WidgetStyle = {
-    size: {
-      left: "100px",
-      top: 0.3,
-      width: "100px",
-      height: 0.4,
-    },
-    textAlign: "right",
+    // size: {
+    //   left: "100px",
+    //   top: 0.3,
+    //   width: "100px",
+    //   height: 0.4,
+    // },
+    textAlign: "left",
     backgroundColor: "#0000ff",
     opacity: 0.5,
+    // position: "relative",
   };
   const first = new StatelessWidget({
     style: firstStyle,
@@ -80,6 +83,8 @@ export function initWidgets() {
   first.addChild(
     new StatefulWidget({
       style: secondStyle,
+      text: "hi",
+
       callbacks: {
         onBeforeCreate: (w) => {
           console.log("onBeforeCreate, w : ", w.id);
@@ -96,59 +101,60 @@ export function initWidgets() {
       },
     })
   );
-  first.children.at(0)?.addChild(
+  first.addChild(
     new StatelessWidget({
-      text: "Hi 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20",
+      text: "This is my text",
       style: thirdStyle,
     })
   );
-  const deleteButton = new StatelessWidget({
-    callbacks: {
-      onClick: (w) => {
-        w.style.backgroundColor = "#9933dd";
-        console.log("w.children : ", w.children);
-        const child = w.children.at(0);
-        if (child) {
-          child.style.visible = !child.style.visible;
-        }
-        Store.rerender();
-      },
-    },
-    style: {
-      size: {
-        right: 0,
-        bottom: 0,
-        width: "100px",
-        height: "60px",
-      },
-      backgroundColor: "#0000ff",
-    },
-  }).addChild(
-    new StatelessWidget({
-      callbacks: {
-        onClick: (w) => {
-          // wmgr.widgets = wmgr.widgets.filter(
-          //   (widget) => widget.id !== "stls-0"
-          // );
-          wmgr.remove("stls-0").then(() => {
-            console.log("Final then, widgets:", widgetIds());
-            // Store.rerender();
-          });
-        },
-      },
+  // const deleteButton = new StatelessWidget({
+  //   callbacks: {
+  //     onClick: (w) => {
+  //       w.style.backgroundColor = "#9933dd";
+  //       console.log("w.children : ", w.children);
+  //       const child = w.children.at(0);
+  //       if (child) {
+  //         child.style.visible = !child.style.visible;
+  //       }
+  //       Store.rerender();
+  //     },
+  //   },
+  //   style: {
+  //     size: {
+  //       right: 0,
+  //       bottom: 0,
+  //       width: "100px",
+  //       height: "60px",
+  //     },
+  //     position: "relative",
+  //     backgroundColor: "#0000ff",
+  //   },
+  // }).addChild(
+  //   new StatelessWidget({
+  //     callbacks: {
+  //       onClick: (w) => {
+  //         // wmgr.widgets = wmgr.widgets.filter(
+  //         //   (widget) => widget.id !== "stls-0"
+  //         // );
+  //         wmgr.remove("stls-0").then(() => {
+  //           console.log("Final then, widgets:", widgetIds());
+  //           // Store.rerender();
+  //         });
+  //       },
+  //     },
 
-      style: {
-        visible: false,
-        size: {
-          right: 0,
-          bottom: "200px",
-          width: "100px",
-          height: "60px",
-        },
-        backgroundColor: "#ffdf0d",
-      },
-    })
-  );
+  //     style: {
+  //       visible: false,
+  //       size: {
+  //         right: 0,
+  //         bottom: "200px",
+  //         width: "100px",
+  //         height: "60px",
+  //       },
+  //       backgroundColor: "#ffdf0d",
+  //     },
+  //   })
+  // );
 
   console.log(
     "Widget Ids : ",

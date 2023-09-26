@@ -1,12 +1,16 @@
-import { Area } from "./Area";
+import { Area, AreaInputSize } from "./Area";
 import WidgetStyle from "./WidgetStyle";
 import TimerJob from "./TimerJob";
 import WidgetState from "@/class/WidgetState";
 import error from "@/class/IError";
 import Store from "@/class/Store";
+import { parsePx } from "@/utils";
 
 export const DefaultStatelessWidgetStyle: WidgetStyle = {
+  horAlign: "left",
+  verAlign: "top",
   position: "relative",
+  display: "block",
   visible: true,
   cursor: "default",
   opacity: 1,
@@ -45,6 +49,7 @@ export type WidgetCallbacks = {
 
 export default class StatelessWidget extends Area {
   addOrder: number;
+  _speak: boolean = false;
   copiedFrom?: StatelessWidget;
   id: string;
   parent: StatelessWidget | null = null;
@@ -54,20 +59,33 @@ export default class StatelessWidget extends Area {
   inputOption?: StatelessWidgetOption;
   _callbacks: WidgetCallbacks;
   text?: string;
+
+  setSpeak(speak: boolean = true) {
+    this._speak = speak;
+  }
+  speak(...args) {
+    if (!this._speak) {
+      return;
+    }
+    console.log(`[${this.id}]`, ...args);
+  }
+
   constructor(option?: StatelessWidgetOption) {
     const { parent, style: inputStyle, id, copiedFrom } = option;
     const style = {
       ...DefaultStatelessWidgetStyle,
       ...(inputStyle ? { ...inputStyle } : {}),
     };
-    const size = style?.size ?? {
+    const size = {
       left: 0,
       top: 0,
       width: 1,
-      height: 1,
-      right: null,
-      bottom: null,
+      height: 0,
+      right: undefined,
+      bottom: undefined,
+      ...(inputStyle?.size ? { ...inputStyle?.size } : {}),
     };
+    //@ts-ignore
     style.size = size;
 
     const verAlign = style?.verAlign ?? (style?.size?.top ? "top" : "bottom");
@@ -250,5 +268,235 @@ export default class StatelessWidget extends Area {
 
   get onDestroyWithCleanup() {
     return this._callbacks.onDestroyWithCleanup;
+  }
+
+  private get innerPaddingStrings(): null | string[] {
+    if (!this._style.padding) {
+      return null;
+    }
+    const p = this._style.padding;
+    const values = p
+      .trim()
+      .split(" ")
+      .filter((v) => v !== "");
+    if (values.length === 0) {
+      return null;
+    }
+    return values;
+  }
+  get innerPadding(): {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  } {
+    if (!this._style.padding) {
+      return {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      };
+    }
+
+    const values = this.innerPaddingStrings;
+    // this.speak("innerPadding", { innerPaddingStrings: values });
+    if (!values) {
+      return {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      };
+    }
+    const len = values.length;
+    if (len === 1) {
+      const v = values[0];
+      const hor = parsePx(this.inputWidth, v);
+      const ver = parsePx(this.inputHeight, v);
+      // console.log("hor, ver : ", hor, ver);
+      return {
+        left: hor,
+        right: hor,
+        top: ver,
+        bottom: ver,
+      };
+    }
+
+    if (len === 2) {
+      const hor = parsePx(this.inputWidth, values[1]);
+      const ver = parsePx(this.inputHeight, values[0]);
+      return {
+        left: hor,
+        right: hor,
+        top: ver,
+        bottom: ver,
+      };
+    }
+
+    if (len === 3) {
+      const top = parsePx(this.inputHeight, values[0]);
+      const hor = parsePx(this.inputWidth, values[1]);
+      const bottom = parsePx(this.inputHeight, values[2]);
+      return {
+        left: hor,
+        right: hor,
+        top: top,
+        bottom: bottom,
+      };
+    }
+
+    if (len === 4) {
+      const top = parsePx(this.inputHeight, values[0]);
+      this.speak("innerPadding()", { top });
+      const right = parsePx(this.inputWidth, values[1]);
+      const bottom = parsePx(this.inputHeight, values[2]);
+      const left = parsePx(this.inputWidth, values[3]);
+      return {
+        left: left,
+        right: right,
+        top: top,
+        bottom: bottom,
+      };
+    }
+
+    error("Failed to parse padding : ", {
+      padding: this._style.padding,
+      widgetId: this.id,
+    });
+  }
+
+  get innerPaddingL(): number {
+    return this.innerPadding.left;
+  }
+
+  get innerPaddingR(): number {
+    return this.innerPadding.right;
+  }
+
+  get innerPaddingT(): number {
+    return this.innerPadding.top;
+  }
+
+  get innerPaddingB(): number {
+    return this.innerPadding.bottom;
+  }
+
+  paddingL(): number {
+    if (!this.parent || this._style.position === "global") {
+      return 0;
+    }
+    const absoluteL = this.parent?.left ?? 0;
+    if (this._style.position === "absolute") {
+      return absoluteL;
+    }
+    // position === "relative"
+    // let relativeL = absoluteL + this.innerPadding.left;
+    let relativeL =
+      absoluteL + (this.parent?.innerPaddingL ?? 0) + this.innerPaddingL;
+    // this.speak("paddingL", {
+    //   relativeL,
+    //   absoluteL,
+    //   parentInnerPaddingL: this.parent?.innerPaddingL ?? 0,
+    //   innerPaddingL: this.innerPaddingL,
+    // });
+    // console.log({
+    //   relativeL,
+    //   absoluteL,
+    //   parentInnerPaddingL: this.parent?.innerPaddingL,
+    //   innerPaddingL: this.innerPaddingL,
+    // });
+
+    const myIndex = this.parent?.children.findIndex((c) => c.id === this.id);
+    const beforeMe = this.parent?.children.slice(0, myIndex);
+    if (
+      beforeMe?.length > 0 &&
+      this._style.display === "flex" &&
+      this._style.flexDirection === "row"
+    ) {
+      const sumOfWidth = beforeMe?.reduce((acc, cur) => acc + cur.width, 0);
+      relativeL += sumOfWidth;
+    }
+    return relativeL;
+  }
+  paddingR(): number {
+    if (!this.parent || this._style.position === "global") {
+      return this._width;
+    }
+    const absoluteR = this.parent?.right ?? 0;
+    if (this._style.position === "absolute") {
+      return absoluteR;
+    }
+    // position === "relative"
+    let relativeR =
+      absoluteR - (this.parent?.innerPaddingR ?? 0) - this.innerPaddingR;
+
+    const myIndex = this.parent?.children.findIndex((c) => c.id === this.id);
+    const afterMe = this.parent?.children.slice(myIndex + 1);
+    if (
+      afterMe?.length > 0 &&
+      this._style.display === "flex" &&
+      this._style.flexDirection === "row"
+    ) {
+      const sumOfWidth = afterMe?.reduce((acc, cur) => acc + cur.width, 0);
+      relativeR -= sumOfWidth;
+    }
+    return relativeR;
+  }
+  paddingT(): number {
+    if (!this.parent || this._style.position === "global") {
+      return 0;
+    }
+    const absoluteT = this.parent?.top ?? 0;
+    if (this._style.position === "absolute") {
+      return absoluteT;
+    }
+    // position === "relative"
+    let relativeT =
+      absoluteT + (this.parent?.innerPaddingT ?? 0) + this.innerPaddingT;
+
+    const myIndex = this.parent?.children.findIndex((c) => c.id === this.id);
+    const aboveMe = this.parent?.children.slice(0, myIndex);
+    if (
+      aboveMe?.length > 0 &&
+      (this._style.display === "block" ||
+        (this._style.display === "flex" &&
+          this._style.flexDirection === "column"))
+    ) {
+      const sumOfHeight = aboveMe?.reduce(
+        (acc, cur) => acc + cur.bottomRelative,
+        0
+      );
+      this.speak("paddingT", { sumOfHeight, topper: aboveMe[0] });
+      relativeT += sumOfHeight;
+    }
+
+    return relativeT;
+  }
+  paddingB(): number {
+    if (!this.parent || this._style.position === "global") {
+      return this._height;
+    }
+    const absoluteB = this.parent?.bottom ?? 0;
+    if (this._style.position === "absolute") {
+      return absoluteB;
+    }
+    // position === "relative"
+    let relativeB =
+      absoluteB - (this.parent?.innerPaddingB ?? 0) - this.innerPaddingB;
+
+    const myIndex = this.parent?.children.findIndex((c) => c.id === this.id);
+    const beneathMe = this.parent?.children.slice(myIndex + 1);
+    if (
+      beneathMe?.length > 0 &&
+      (this._style.display === "block" ||
+        (this._style.display === "flex" &&
+          this._style.flexDirection === "column"))
+    ) {
+      const sumOfHeight = beneathMe?.reduce((acc, cur) => acc + cur.height, 0);
+      relativeB -= sumOfHeight;
+    }
+
+    return relativeB;
   }
 }

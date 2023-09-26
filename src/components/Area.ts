@@ -4,6 +4,7 @@ import {
   clientWidth,
   hasNullish,
   isNullish,
+  isPx,
   notNullish,
   parsePx,
   strPercentToFloat,
@@ -113,18 +114,27 @@ export abstract class Area {
   }
 
   // left, top based px
-  paddingL(): number {
-    return this.parent?.left ?? 0;
-  }
-  paddingR(): number {
-    return this.parent?.right ?? clientWidth();
-  }
-  paddingT(): number {
-    return this.parent?.top ?? 0;
-  }
-  paddingB(): number {
-    return this.parent?.bottom ?? clientHeight();
-  }
+  // paddingL(): number {
+  //   return this.parent?.left ?? 0;
+  // }
+  // paddingR(): number {
+  //   return this.parent?.right ?? clientWidth();
+  // }
+  // paddingT(): number {
+  //   return this.parent?.top ?? 0;
+  // }
+  // paddingB(): number {
+  //   return this.parent?.bottom ?? clientHeight();
+  // }
+  abstract paddingL(): number;
+  abstract paddingR(): number;
+  abstract paddingT(): number;
+  abstract paddingB(): number;
+  abstract get innerPaddingL(): number;
+  abstract get innerPaddingR(): number;
+  abstract get innerPaddingT(): number;
+  abstract get innerPaddingB(): number;
+  abstract speak(...args): void;
 
   // left & top
   padding(): { left: number; right: number; top: number; bottom: number } {
@@ -141,6 +151,7 @@ export abstract class Area {
     const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
     const startPx = this.horPx(start);
     const lengthPx = this.horPx(length);
+    this.speak("Area.left", { startPx, lengthPx, pl, pr, pt, pb, align });
     // console.log({ startPx, lengthPx, pl, pr, pt, pb });
     switch (align) {
       case "left":
@@ -173,9 +184,23 @@ export abstract class Area {
   get rightRelative(): number {
     return this.right - this.paddingL();
   }
+  get inputWidth(): number {
+    const { length } = this.horSize;
+    const px = this.horPx(length);
+    return px;
+  }
+  get inputHeight(): number {
+    const { length } = this.verSize;
+    const px = this.verPx(length);
+    return px;
+  }
   get width(): number {
     const { length } = this.horSize;
-    return this.horPx(length);
+    const px = this.horPx(length);
+    if (typeof length === "string" && isPx(length)) {
+      return px;
+    }
+    return Math.max(px - this.innerPaddingL - this.innerPaddingR, 0);
   }
   get top(): number {
     const { start, length, align } = this.verSize;
@@ -211,12 +236,15 @@ export abstract class Area {
     error("invalid bottom", { verSize: this.verSize });
   }
   get bottomRelative(): number {
-    return this.bottom - this.paddingT();
+    return this.bottom - this.top;
   }
   get height(): number {
     const { length } = this.verSize;
-    const baseVer = this.parent?.height ?? this._height;
-    return parsePx(baseVer, length);
+    const px = this.verPx(length);
+    if (typeof length === "string" && isPx(length)) {
+      return px;
+    }
+    return Math.max(px - this.innerPaddingT - this.innerPaddingB, 0);
   }
 
   protected horPx(number: number | string) {

@@ -357,8 +357,11 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const { left, top, width, height, right, bottom } = widget.lrwh;
-    // console.log({ left, width, right });
-    // console.log({ top, height, bottom });
+    if ([2].includes(widget.addOrder)) {
+      console.log({ order: widget.addOrder, left, width, right });
+      console.log({ order: widget.addOrder, top, height, bottom });
+      widget.setSpeak();
+    }
 
     const hovered = this.pointerMoveOn?.id === widget.id;
     const pointerDown = this.pointerDownOn?.id === widget.id;
@@ -371,9 +374,9 @@ class MHPCanvas extends BasicCanvas {
       // console.log({ hoverStyle: style });
     }
 
-    if (width === 0 || height === 0) {
-      return;
-    }
+    // if (width === 0 || height === 0) {
+    //   return;
+    // }
 
     const backgroundColor = background(style.backgroundColor, style.opacity);
     // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
@@ -398,6 +401,9 @@ class MHPCanvas extends BasicCanvas {
       const text = widget.text;
       const fontSize = style.fontSize ?? C.System.fontSize;
       const lineHeight = style.lineHeight ?? fontSize * 1.2;
+      const orgHeight = widget.height;
+      const heightInPx = orgHeight < lineHeight ? lineHeight : orgHeight;
+      widget.setHeight(toPx(heightInPx));
       const font = style.font ?? C.System.font;
       this.ctx.font = `${fontSize}px ${font}`;
       this.ctx.fillStyle = style.color ?? "#000";
