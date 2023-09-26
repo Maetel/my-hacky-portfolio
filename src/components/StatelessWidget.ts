@@ -18,22 +18,28 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
   color: "black",
 };
 
-export type OnDestoryWithoutCleanup = (stls: StatelessWidget) => any;
+export type WidgetCallback = (stls: StatelessWidget) => any;
+export type OnDestoryWithoutCleanup = WidgetCallback;
 export type OnDestoryWithCleanup = (
   stls: StatelessWidget,
   cleanUp: () => any
 ) => any;
-export type OnCreate = (stls: StatelessWidget) => any;
+export type OnCreate = WidgetCallback;
 export interface StatelessWidgetOption {
   parent?: StatelessWidget;
   style?: WidgetStyle;
   id?: string;
   copiedFrom?: StatelessWidget;
-  onClick?: (stls: StatelessWidget) => any;
-  onCreate?: OnCreate;
-  onDestroy?: OnDestoryWithoutCleanup;
-  onDestroyWithCleanup?: OnDestoryWithCleanup;
+  callbacks?: WidgetCallbacks;
 }
+
+export type WidgetCallbacks = {
+  onClick?: WidgetCallback;
+  onBeforeCreate?: WidgetCallback;
+  onAfterCreate?: WidgetCallback;
+  onDestroy?: WidgetCallback;
+  onDestroyWithCleanup?: OnDestoryWithCleanup;
+};
 
 export default class StatelessWidget extends Area {
   addOrder: number;
@@ -44,6 +50,7 @@ export default class StatelessWidget extends Area {
   _style: WidgetStyle;
   timerJob?: TimerJob;
   inputOption?: StatelessWidgetOption;
+  _callbacks: WidgetCallbacks;
   constructor(option?: StatelessWidgetOption) {
     const { parent, style, id, copiedFrom } = option;
     const verAlign = style?.verAlign ?? (style?.size?.top ? "top" : "bottom");
@@ -53,6 +60,7 @@ export default class StatelessWidget extends Area {
     this.addOrder = Store.getNewWidgetAddOrder();
     this.inputOption = option;
     this.parent = parent;
+    this._callbacks = { ...(option?.callbacks ?? {}) };
     // console.log({ pcl: parent?.children.length, ao: this.addOrder });
     this.id =
       id ??
@@ -63,7 +71,9 @@ export default class StatelessWidget extends Area {
       ...(style ? { ...style } : {}),
     };
     parent?.addChild(this);
+    option?.callbacks?.onBeforeCreate?.(this);
     Store.onStatelessWidgetCreate(this);
+    option?.callbacks?.onAfterCreate?.(this);
     console.log("Created : ", this.id);
   }
   buildOption() {
@@ -153,8 +163,8 @@ export default class StatelessWidget extends Area {
   async delete() {
     return new Promise(async (resolve) => {
       return this.deleteAllChildren().then(() => {
-        if (this.inputOption?.onDestroyWithCleanup) {
-          this.inputOption.onDestroyWithCleanup(this, () => {
+        if (this._callbacks.onDestroyWithCleanup) {
+          this._callbacks.onDestroyWithCleanup(this, () => {
             Store.removeWidgetFromList(this);
             if (this.parent) {
               this.parent.children = this.parent.children.filter(
@@ -165,8 +175,8 @@ export default class StatelessWidget extends Area {
           });
           return;
         }
-        if (this.inputOption?.onDestroy) {
-          this.inputOption.onDestroy(this);
+        if (this._callbacks.onDestroy) {
+          this._callbacks.onDestroy(this);
         }
         Store.removeWidgetFromList(this);
         if (this.parent) {
@@ -177,5 +187,53 @@ export default class StatelessWidget extends Area {
         resolve(this);
       });
     });
+  }
+
+  set callbacks(callbacks: WidgetCallbacks) {
+    this._callbacks = callbacks;
+  }
+
+  appendCallbacks(callbacks: WidgetCallbacks) {
+    this._callbacks = { ...this._callbacks, ...callbacks };
+  }
+
+  set onClick(callback: WidgetCallback) {
+    this._callbacks.onClick = callback;
+  }
+
+  get onClick() {
+    return this._callbacks.onClick;
+  }
+
+  set onBeforeCreate(callback: WidgetCallback) {
+    this._callbacks.onBeforeCreate = callback;
+  }
+
+  get onBeforeCreate() {
+    return this._callbacks.onBeforeCreate;
+  }
+
+  set onAfterCreate(callback: WidgetCallback) {
+    this._callbacks.onAfterCreate = callback;
+  }
+
+  get onAfterCreate() {
+    return this._callbacks.onAfterCreate;
+  }
+
+  set onDestroy(callback: WidgetCallback) {
+    this._callbacks.onDestroy = callback;
+  }
+
+  get onDestroy() {
+    return this._callbacks.onDestroy;
+  }
+
+  set onDestroyWithCleanup(callback: OnDestoryWithCleanup) {
+    this._callbacks.onDestroyWithCleanup = callback;
+  }
+
+  get onDestroyWithCleanup() {
+    return this._callbacks.onDestroyWithCleanup;
   }
 }

@@ -158,7 +158,7 @@ class MHPCanvas extends BasicCanvas {
   // handle events
 
   handleClick(widget: StatelessWidget) {
-    this.pointerDownOn?.inputOption?.onClick?.(widget);
+    this.pointerDownOn?.onClick?.(widget);
   }
 
   direction = 1;

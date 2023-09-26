@@ -76,17 +76,37 @@ export function initWidgets() {
   const first = new StatelessWidget({
     style: firstStyle,
   });
-  first.addChild(new StatefulWidget({ style: secondStyle }));
+  first.addChild(
+    new StatefulWidget({
+      style: secondStyle,
+      callbacks: {
+        onBeforeCreate: (w) => {
+          console.log("onBeforeCreate, w : ", w.id);
+        },
+        onDestroyWithCleanup: (w, cleanUp) => {
+          console.log("Destroy : ", w.id);
+          console.log("Clean up in 1sec");
+          setTimeout(() => {
+            cleanUp();
+            console.log("Cleaned");
+            Store.rerender();
+          }, 1000);
+        },
+      },
+    })
+  );
   first.children.at(0)?.addChild(new StatelessWidget({ style: thirdStyle }));
   const deleteButton = new StatelessWidget({
-    onClick: (w) => {
-      w.style.backgroundColor = "#9933dd";
-      console.log("w.children : ", w.children);
-      const child = w.children.at(0);
-      if (child) {
-        child.style.visible = !child.style.visible;
-      }
-      Store.rerender();
+    callbacks: {
+      onClick: (w) => {
+        w.style.backgroundColor = "#9933dd";
+        console.log("w.children : ", w.children);
+        const child = w.children.at(0);
+        if (child) {
+          child.style.visible = !child.style.visible;
+        }
+        Store.rerender();
+      },
     },
     style: {
       size: {
@@ -99,15 +119,18 @@ export function initWidgets() {
     },
   }).addChild(
     new StatelessWidget({
-      onClick: (w) => {
-        // wmgr.widgets = wmgr.widgets.filter(
-        //   (widget) => widget.id !== "stls-0"
-        // );
-        wmgr.remove("stls-0").then(() => {
-          console.log("Final then, widgets:", widgetIds());
-          // Store.rerender();
-        });
+      callbacks: {
+        onClick: (w) => {
+          // wmgr.widgets = wmgr.widgets.filter(
+          //   (widget) => widget.id !== "stls-0"
+          // );
+          wmgr.remove("stls-0").then(() => {
+            console.log("Final then, widgets:", widgetIds());
+            // Store.rerender();
+          });
+        },
       },
+
       style: {
         visible: false,
         size: {
@@ -120,34 +143,7 @@ export function initWidgets() {
       },
     })
   );
-  // console.log({ fid: first.id, sid: second.id });
-  // const first = new StatelessWidget("first", null);
-  // const second = new StatefulWidget("second", first, {
-  //   size: {
-  //     left: "100px",
-  //     bottom: "100px",
-  //     width: "250px",
-  //     height: "350px",
-  //   },
-  //   backgroundColor: "#00ff00",
-  //   // backgroundColor: "transparent",
-  //   opacity: 0.5,
-  // });
-  // const third = new StatefulWidget("third", second, {
-  //   size: {
-  //     left: "100px",
-  //     top: 0.3,
-  //     width: "100px",
-  //     height: 0.4,
-  //   },
-  //   backgroundColor: "#0000ff",
-  //   opacity: 0.5,
-  // });
-  // WidgetManager.push(background, first, second);
-  // WidgetManager.push(first, second, third);
-  // WidgetManager.push(first);
 
-  // console.log("Widgets : ", widgets);
   console.log(
     "Widget Ids : ",
     widgets().map((w) => w.id)
