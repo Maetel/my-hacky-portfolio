@@ -27,6 +27,8 @@ export function initWidgets() {
       height: "500px",
     },
     padding: "100px 50px 20px 100px",
+    display: "flex",
+    // flexDirection: "row",
     backgroundColor: "#ff0000",
     borderRadius: 30,
     opacity: 0.9,
@@ -48,8 +50,9 @@ export function initWidgets() {
       // left: "20px",
       // width: "50%",
       // bottom: "50px",
-      height: "100px",
+      // height: "100px",
     },
+    padding: "20px",
     backgroundColor: "#00ff00",
     // backgroundColor: "transparent",
     opacity: 0.5,
@@ -84,7 +87,7 @@ export function initWidgets() {
   first.addChild(
     new StatefulWidget({
       style: secondStyle,
-      text: "hi",
+      text: "hi\nhello",
 
       callbacks: {
         onBeforeCreate: (w) => {

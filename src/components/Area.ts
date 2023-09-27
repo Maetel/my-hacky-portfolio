@@ -85,8 +85,8 @@ export abstract class Area {
   abstract addChild(child: Area): void;
   // parentHorSize: AreaLength; // screenWidth if parent is null
   // parentVerSize: AreaLength; // screenHeight if parent is null
-  _width: number; // screenwidth
-  _height: number; // screenheight
+  screenWidth: number; // screenwidth
+  screenHeight: number; // screenheight
   horSize: AreaLength = {} as AreaLength;
   verSize: AreaLength = {} as AreaLength;
   areaType: AreaSizeInputType;
@@ -109,8 +109,8 @@ export abstract class Area {
   }
 
   updateScreenSize() {
-    this._width = clientWidth();
-    this._height = clientHeight();
+    this.screenWidth = clientWidth();
+    this.screenHeight = clientHeight();
   }
 
   // left, top based px
@@ -148,18 +148,25 @@ export abstract class Area {
 
   get left(): number {
     const { start, length, align } = this.horSize;
-    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    if (align === "right") {
+      return this.right - this.width;
+    }
     const startPx = this.horPx(start);
     const lengthPx = this.horPx(length);
-    this.speak("Area.left", { startPx, lengthPx, pl, pr, pt, pb, align });
-    // console.log({ startPx, lengthPx, pl, pr, pt, pb });
+    const parentPaddingL = this.parent?.innerPaddingL ?? 0;
+    const parentLeft = this.parent?.left ?? 0;
+    const sibilingsWidth = this.sibilings.left.reduce(
+      (acc, cur) => acc + cur.width,
+      0
+    );
     switch (align) {
       case "left":
-        return pl + startPx;
+        return startPx + parentLeft + parentPaddingL + sibilingsWidth;
       case "center":
-        return (pl + pr) * 0.5 + startPx - lengthPx * 0.5;
-      case "right":
-        return pr - startPx - lengthPx;
+        return Math.max(
+          this.center.x - this.width * 0.5,
+          parentLeft + parentPaddingL
+        );
     }
     error("invalid left", { horSize: this.horSize });
   }
@@ -168,16 +175,24 @@ export abstract class Area {
   }
   get right(): number {
     const { start, length, align } = this.horSize;
-    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    if (align === "left") {
+      return this.left + this.width;
+    }
     const startPx = this.horPx(start);
-    const lengthPx = this.horPx(length);
+    const parentPaddingR = this.parent?.innerPaddingR ?? clientWidth();
+    const parentRight = this.parent?.right ?? clientWidth();
+    const sibilingsWidth = this.sibilings.right.reduce(
+      (acc, cur) => acc + cur.width,
+      0
+    );
     switch (align) {
-      case "left":
-        return pl + startPx + lengthPx;
-      case "center":
-        return (pl + pr) * 0.5 + startPx + lengthPx * 0.5;
       case "right":
-        return pr - startPx;
+        return parentRight - parentPaddingR - startPx - sibilingsWidth;
+      case "center":
+        return Math.max(
+          this.center.x + this.width * 0.5,
+          parentRight - parentPaddingR
+        );
     }
     error("invalid right", { horSize: this.horSize });
   }
@@ -203,37 +218,69 @@ export abstract class Area {
     // }
     // return Math.max(px - this.innerPaddingL - this.innerPaddingR, 0);
   }
+
+  abstract get sibilings(): {
+    left: Area[];
+    right: Area[];
+    top: Area[];
+    bottom: Area[];
+  };
+
   get top(): number {
     const { start, length, align } = this.verSize;
-    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
+    if (align === "bottom") {
+      return this.bottom - this.height;
+    }
+    const parentPaddingT = this.parent?.innerPaddingT ?? 0;
+    const parentTop = this.parent?.top ?? 0;
+    const sibilingsHeight = this.sibilings.top.reduce(
+      (acc, cur) => acc + cur.height,
+      0
+    );
     const startPx = this.verPx(start);
-    const lengthPx = this.verPx(length);
     switch (align) {
       case "top":
-        return pt + startPx;
+        return parentTop + parentPaddingT + startPx + sibilingsHeight;
       case "center":
-        return (pt + pb) * 0.5 + startPx - lengthPx * 0.5;
-      case "bottom":
-        return pb - startPx - lengthPx;
+        return Math.max(
+          this.center.y - this.height * 0.5,
+          parentTop + parentPaddingT
+        );
     }
     error("invalid top", { verSize: this.verSize });
+  }
+  get center(): { x: number; y: number } {
+    return {
+      x: (this.left + this.right) * 0.5,
+      y: (this.top + this.bottom) * 0.5,
+    };
   }
   get topRelative(): number {
     return this.top - this.paddingT();
   }
   get bottom(): number {
     const { start, length, align } = this.verSize;
-    const { left: pl, right: pr, top: pt, bottom: pb } = this.padding();
-    const startPx = this.verPx(start);
-    const lengthPx = this.verPx(length);
-    switch (align) {
-      case "top":
-        return pt + startPx + lengthPx;
-      case "center":
-        return (pt + pb) * 0.5 + startPx + lengthPx * 0.5;
-      case "bottom":
-        return pb - startPx;
+    if (align === "top") {
+      return this.top + this.height;
     }
+    const startPx = this.verPx(start);
+    const parentPaddingB = this.parent?.innerPaddingB ?? clientHeight();
+    const parentBottom = this.parent?.bottom ?? clientHeight();
+    const sibilingsHeight = this.sibilings.bottom.reduce(
+      (acc, cur) => acc + cur.height,
+      0
+    );
+
+    switch (align) {
+      case "bottom":
+        return parentBottom - parentPaddingB - startPx - sibilingsHeight;
+      case "center":
+        return Math.max(
+          this.center.y + this.height * 0.5,
+          parentBottom - parentPaddingB
+        );
+    }
+
     error("invalid bottom", { verSize: this.verSize });
   }
   get bottomRelative(): number {
@@ -254,7 +301,7 @@ export abstract class Area {
     if (p) {
       return parsePx(p.width - (p.innerPaddingL + p.innerPaddingR), number);
     }
-    return parsePx(this._width, number);
+    return parsePx(this.screenWidth, number);
   }
 
   protected verPx(number: number | string) {
@@ -263,7 +310,7 @@ export abstract class Area {
     if (p) {
       return parsePx(p.height - (p.innerPaddingT + p.innerPaddingB), number);
     }
-    return parsePx(this._height, number);
+    return parsePx(this.screenHeight, number);
   }
 
   forChildren(
@@ -494,21 +541,21 @@ export abstract class Area {
 
   get xywhRatio() {
     const retval = { ...this.xywh };
-    retval.x /= this._width;
-    retval.y /= this._height;
-    retval.w /= this._width;
-    retval.h /= this._height;
+    retval.x /= this.screenWidth;
+    retval.y /= this.screenHeight;
+    retval.w /= this.screenWidth;
+    retval.h /= this.screenHeight;
     return retval;
   }
 
   get lrwhRatio() {
     const retval = { ...this.lrwh };
-    retval.left /= this._width;
-    retval.right /= this._width;
-    retval.width /= this._width;
-    retval.top /= this._height;
-    retval.bottom /= this._height;
-    retval.height /= this._height;
+    retval.left /= this.screenWidth;
+    retval.right /= this.screenWidth;
+    retval.width /= this.screenWidth;
+    retval.top /= this.screenHeight;
+    retval.bottom /= this.screenHeight;
+    retval.height /= this.screenHeight;
     return retval;
   }
 

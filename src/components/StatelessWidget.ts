@@ -5,6 +5,7 @@ import WidgetState from "@/class/WidgetState";
 import error from "@/class/IError";
 import Store from "@/class/Store";
 import { parsePx } from "@/utils";
+import * as C from "@/constants";
 
 export const DefaultStatelessWidgetStyle: WidgetStyle = {
   horAlign: "left",
@@ -49,7 +50,7 @@ export type WidgetCallbacks = {
 
 export default class StatelessWidget extends Area {
   addOrder: number;
-  _speak: boolean = false;
+  _speak: string[] = [];
   copiedFrom?: StatelessWidget;
   id: string;
   parent: StatelessWidget | null = null;
@@ -60,14 +61,52 @@ export default class StatelessWidget extends Area {
   _callbacks: WidgetCallbacks;
   text?: string;
 
-  setSpeak(speak: boolean = true) {
-    this._speak = speak;
+  setSpeak(id: string) {
+    this._speak = this._speak.concat(id);
   }
-  speak(...args) {
-    if (!this._speak) {
-      return;
+  speak(id: string, ...args) {
+    if (this._speak.includes(id)) {
+      console.log(`[${this.id} - ${id}]`, ...args);
     }
-    console.log(`[${this.id}]`, ...args);
+  }
+
+  getTextSegments(ctx: CanvasRenderingContext2D) {
+    const prevFont = ctx.font;
+    const fontSize = this.style.fontSize ?? C.System.fontSize;
+    const font = this.style.font ?? C.System.font;
+    ctx.font = `${fontSize}px ${font}`;
+
+    const totalText = this.text ?? "";
+    const maxWidth =
+      this.width ??
+      (this.parent?.width
+        ? this.parent.width -
+          this.parent.innerPaddingL -
+          this.parent.innerPaddingR
+        : this.screenWidth);
+    const segments = [];
+    let segment = "";
+    const textWritableWidth =
+      maxWidth - this.innerPaddingL - this.innerPaddingR;
+    for (let i = 0; i < totalText.length; i++) {
+      // this.speak("getTextHeight", { i, char: totalText[i] });
+      if (totalText[i] === "\n") {
+        segments.push(segment);
+        segment = "";
+        continue;
+      }
+      segment += totalText[i];
+      const textWidth = ctx.measureText(segment).width;
+      if (textWidth > textWritableWidth) {
+        segments.push(segment);
+        segment = "";
+      }
+    }
+    if (segment.length > 0) {
+      segments.push(segment);
+    }
+    ctx.font = prevFont;
+    return segments;
   }
 
   constructor(option?: StatelessWidgetOption) {
@@ -284,6 +323,44 @@ export default class StatelessWidget extends Area {
     }
     return values;
   }
+
+  get sibilings(): {
+    left: StatelessWidget[];
+    right: StatelessWidget[];
+    top: StatelessWidget[];
+    bottom: StatelessWidget[];
+  } {
+    if (!this.parent) {
+      return {
+        left: [],
+        right: [],
+        top: [],
+        bottom: [],
+      };
+    }
+    const myIndex = this.parent.children.indexOf(this) ?? -1;
+    if (myIndex === -1) {
+      return {
+        left: [],
+        right: [],
+        top: [],
+        bottom: [],
+      };
+    }
+    const hasHor =
+      this.parent.style.display === "flex" &&
+      this.parent.style.flexDirection === "row";
+    const hasVer = !hasHor;
+    const beforeMe = this.parent.children.slice(0, myIndex) ?? [];
+    const afterMe = this.parent.children.slice(myIndex + 1) ?? [];
+    return {
+      left: hasHor ? beforeMe : [],
+      right: hasHor ? afterMe : [],
+      top: hasVer ? beforeMe : [],
+      bottom: hasVer ? afterMe : [],
+    };
+  }
+
   get innerPadding(): {
     left: number;
     right: number;
@@ -383,7 +460,7 @@ export default class StatelessWidget extends Area {
   }
 
   paddingL(): number {
-    if (!this.parent || this._style.position === "global") {
+    if (!this.parent) {
       return 0;
     }
     const absoluteL = this.parent?.left ?? 0;
@@ -421,7 +498,7 @@ export default class StatelessWidget extends Area {
   }
   paddingR(): number {
     if (!this.parent || this._style.position === "global") {
-      return this._width;
+      return this.screenWidth;
     }
     const absoluteR = this.parent?.right ?? 0;
     if (this._style.position === "absolute") {
@@ -475,7 +552,7 @@ export default class StatelessWidget extends Area {
   }
   paddingB(): number {
     if (!this.parent || this._style.position === "global") {
-      return this._height;
+      return this.screenHeight;
     }
     const absoluteB = this.parent?.bottom ?? 0;
     if (this._style.position === "absolute") {

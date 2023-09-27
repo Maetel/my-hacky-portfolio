@@ -356,11 +356,41 @@ class MHPCanvas extends BasicCanvas {
     if (!widget.style.visible) {
       return;
     }
+
+    // update style
+    const text = widget.text;
+    const textWidth = this.ctx.measureText(text).width;
+    const textSegments = widget.getTextSegments(this.ctx);
+    const singleLineHeight = widget.style.lineHeight ?? C.System.fontSize * 1.2;
+    const textHeight = textSegments.length * singleLineHeight;
+    {
+      const { left, top, width, height, right, bottom } = widget.lrwh;
+
+      if (widget.addOrder === 1) {
+        widget.setSpeak("getTextHeight");
+        console.log({ textWidth, textHeight });
+      }
+      const virtualWidth =
+        textWidth + widget.innerPaddingL + widget.innerPaddingR;
+      const virtualHeight =
+        textHeight + widget.innerPaddingT + widget.innerPaddingB;
+      if (width < virtualWidth) {
+        widget.setWidth(toPx(virtualWidth));
+      }
+      if (height < virtualHeight) {
+        widget.setHeight(toPx(virtualHeight));
+      }
+    }
     const { left, top, width, height, right, bottom } = widget.lrwh;
-    if ([].includes(widget.addOrder)) {
+    const pl = left + widget.innerPaddingL;
+    const pr = right - widget.innerPaddingR;
+    const pt = top + widget.innerPaddingT;
+    const pb = bottom - widget.innerPaddingB;
+
+    if ([1].includes(widget.addOrder)) {
       console.log({ order: widget.addOrder, left, width, right });
       console.log({ order: widget.addOrder, top, height, bottom });
-      widget.setSpeak();
+      // widget.setSpeak();
     }
 
     const hovered = this.pointerMoveOn?.id === widget.id;
@@ -397,8 +427,7 @@ class MHPCanvas extends BasicCanvas {
     }
 
     // render text
-    if (widget.text) {
-      const text = widget.text;
+    textSegments.forEach((text, i) => {
       const fontSize = style.fontSize ?? C.System.fontSize;
       const lineHeight = style.lineHeight ?? fontSize * 1.2;
       const orgHeight = widget.height;
@@ -409,9 +438,7 @@ class MHPCanvas extends BasicCanvas {
       this.ctx.fillStyle = style.color ?? "#000";
 
       // const { left: pl, right: pr, top: pt, bottom: pb } = widget.padding();
-      const pl = widget.left;
-      const pr = widget.right;
-      const pt = widget.top;
+
       const textAlign = style.textAlign ?? "left";
       const textWidth = this.ctx.measureText(text).width;
       const textX =
@@ -420,11 +447,11 @@ class MHPCanvas extends BasicCanvas {
           : textAlign === "right"
           ? pr
           : (pl + pr) * 0.5;
-      const textY = pt + lineHeight;
+      const textY = pt + (i + 1) * singleLineHeight;
       const maxWidth = widget.width;
       this.ctx.textAlign = textAlign;
       this.ctx.fillText(text, textX, textY);
-    }
+    });
 
     //restore
     this.ctx.fillStyle = prev.fillStyle;
