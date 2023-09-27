@@ -197,10 +197,11 @@ export abstract class Area {
   get width(): number {
     const { length } = this.horSize;
     const px = this.horPx(length);
-    if (typeof length === "string" && isPx(length)) {
-      return px;
-    }
-    return Math.max(px - this.innerPaddingL - this.innerPaddingR, 0);
+    return px;
+    // if (typeof length === "string" && isPx(length)) {
+    //   return px;
+    // }
+    // return Math.max(px - this.innerPaddingL - this.innerPaddingR, 0);
   }
   get top(): number {
     const { start, length, align } = this.verSize;
@@ -236,23 +237,33 @@ export abstract class Area {
     error("invalid bottom", { verSize: this.verSize });
   }
   get bottomRelative(): number {
-    return this.bottom - this.top;
+    return this.bottom - this.paddingT();
   }
   get height(): number {
     const { length } = this.verSize;
     const px = this.verPx(length);
-    if (typeof length === "string" && isPx(length)) {
-      return px;
-    }
-    return Math.max(px - this.innerPaddingT - this.innerPaddingB, 0);
+    return px;
+    // if (typeof length === "string" && isPx(length)) {
+    //   return px;
+    // }
+    // return Math.max(px - this.innerPaddingT - this.innerPaddingB, 0);
   }
 
   protected horPx(number: number | string) {
-    return parsePx(this.parent?.width ?? this._width, number);
+    const p = this.parent;
+    if (p) {
+      return parsePx(p.width - (p.innerPaddingL + p.innerPaddingR), number);
+    }
+    return parsePx(this._width, number);
   }
 
   protected verPx(number: number | string) {
-    return parsePx(this.parent?.height ?? this._height, number);
+    // return parsePx(this.parent?.height ?? this._height, number);
+    const p = this.parent;
+    if (p) {
+      return parsePx(p.height - (p.innerPaddingT + p.innerPaddingB), number);
+    }
+    return parsePx(this._height, number);
   }
 
   forChildren(

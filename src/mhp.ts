@@ -357,7 +357,7 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const { left, top, width, height, right, bottom } = widget.lrwh;
-    if ([2].includes(widget.addOrder)) {
+    if ([].includes(widget.addOrder)) {
       console.log({ order: widget.addOrder, left, width, right });
       console.log({ order: widget.addOrder, top, height, bottom });
       widget.setSpeak();

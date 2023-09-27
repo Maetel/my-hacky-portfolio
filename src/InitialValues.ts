@@ -26,6 +26,7 @@ export function initWidgets() {
       top: 0.1,
       height: 0.5,
     },
+    padding: "100px 50px 20px 100px",
     backgroundColor: "#ff0000",
     borderRadius: 30,
     grabbable: true,
@@ -42,13 +43,12 @@ export function initWidgets() {
     },
   };
   const secondStyle: WidgetStyle = {
-    // size: {
-    // left: "20px",
-    // width: "50%",
-    // bottom: "50px",
-    // height: "1px",
-    // },
-    padding: "100px 50px 20px 100px",
+    size: {
+      // left: "20px",
+      // width: "50%",
+      // bottom: "50px",
+      height: "100px",
+    },
     backgroundColor: "#00ff00",
     // backgroundColor: "transparent",
     opacity: 0.5,
@@ -66,12 +66,12 @@ export function initWidgets() {
     // position: "relative",
   };
   const thirdStyle: WidgetStyle = {
-    // size: {
-    //   left: "100px",
-    //   top: 0.3,
-    //   width: "100px",
-    //   height: 0.4,
-    // },
+    size: {
+      // left: "100px",
+      // top: 0.3,
+      // width: "100px",
+      height: "100px",
+    },
     textAlign: "left",
     backgroundColor: "#0000ff",
     opacity: 0.5,
