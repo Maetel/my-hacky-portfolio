@@ -361,7 +361,9 @@ class MHPCanvas extends BasicCanvas {
     const text = widget.text;
     const textWidth = this.ctx.measureText(text).width;
     const textSegments = widget.getTextSegments(this.ctx);
-    const singleLineHeight = widget.style.lineHeight ?? C.System.fontSize * 1.2;
+    const singleLineHeight =
+      widget.style.lineHeight ??
+      (widget.style.fontSize ?? C.System.fontSize) * 1.1;
     const textHeight = textSegments.length * singleLineHeight;
     {
       const { left, top, width, height, right, bottom } = widget.lrwh;
