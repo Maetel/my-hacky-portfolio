@@ -53,7 +53,9 @@ export function initWidgets() {
       // height: "100px",
     },
     padding: "20px",
-    backgroundColor: "#00ff00",
+    // backgroundColor: "#00ff00",
+    fontSize: 30,
+    textAlign: "left",
     // backgroundColor: "transparent",
     opacity: 0.5,
     hover: {
@@ -87,7 +89,7 @@ export function initWidgets() {
   first.addChild(
     new StatefulWidget({
       style: secondStyle,
-      text: "hi\nhello",
+      text: "hi\nhello asdlkmfasld;kf masldfm adsf a;sdlkm famsd fklmads mfsadkmfdasm fadslkmf",
 
       callbacks: {
         onBeforeCreate: (w) => {
