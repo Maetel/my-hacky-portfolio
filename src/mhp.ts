@@ -471,6 +471,59 @@ class MHPCanvas extends BasicCanvas {
     this.redraw();
   }
 
+  clearBase(
+    withRuler = true,
+    gridOption: {
+      gridInterval: number;
+      lineColor: string;
+      highlightInterval: number;
+      highlightColor: string;
+    } = {
+      gridInterval: 20,
+      lineColor: "#ddd",
+      highlightInterval: 5,
+      highlightColor: "#888",
+    }
+  ) {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    if (!withRuler) {
+      return;
+    }
+
+    // Define the grid parameters
+    const { gridInterval, lineColor, highlightInterval, highlightColor } =
+      gridOption;
+    const prevStrokeStyle = this.ctx.strokeStyle;
+    this.ctx.strokeStyle = lineColor;
+
+    // Draw the grid
+    const h = this.height;
+    const w = this.width;
+    let xCount = 1;
+    let yCount = 1;
+    for (let x = gridInterval; x <= w; x += gridInterval) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle =
+        xCount % highlightInterval === 0 ? highlightColor : lineColor;
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, h);
+      this.ctx.stroke();
+      xCount++;
+    }
+
+    for (let y = gridInterval; y <= h; y += gridInterval) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle =
+        yCount % highlightInterval === 0 ? highlightColor : lineColor;
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(w, y);
+      this.ctx.stroke();
+      yCount++;
+    }
+
+    this.ctx.strokeStyle = prevStrokeStyle;
+  }
+
   // @override
   _run(timestamp: number) {
     try {
@@ -486,7 +539,8 @@ class MHPCanvas extends BasicCanvas {
 
       if (this.updateScreen()) {
         const { x, y, w, h } = this.findUpdateArea();
-        this.ctx.clearRect(x, y, w, h);
+        // this.ctx.clearRect(x, y, w, h);
+        this.clearBase();
         this.render();
       } else {
         this.showIdle();

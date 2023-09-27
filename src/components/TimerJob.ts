@@ -77,7 +77,7 @@ export default class TimerJob {
     return untilId;
   }
 
-  clear(id: string, execOnFinish = false) {
+  clearTimerJob(id: string, execOnFinish = false) {
     // console.log("Cleared ", id);
     if (execOnFinish) {
       const job = this.jobs.find((j) => j.id === id);
@@ -169,7 +169,7 @@ export default class TimerJob {
           untilJob.callback(elapsed);
         } else {
           untilJob?.onFinish?.(elapsed);
-          this.clear(untilJob.id);
+          this.clearTimerJob(untilJob.id);
         }
       }
 
@@ -178,7 +178,7 @@ export default class TimerJob {
         if (now >= timeoutJob.end) {
           timeoutJob.callback();
           timeoutJob?.onFinish?.();
-          this.clear(timeoutJob.id);
+          this.clearTimerJob(timeoutJob.id);
         }
       }
 
@@ -199,7 +199,7 @@ export default class TimerJob {
             const counterJob = intervalJob as CounterJob;
             if (counterJob.execCount === counterJob.count) {
               counterJob?.onFinish?.(input);
-              this.clear(counterJob.id);
+              this.clearTimerJob(counterJob.id);
             }
           }
         }

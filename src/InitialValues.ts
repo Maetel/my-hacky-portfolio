@@ -21,14 +21,15 @@ export function initWidgets() {
   // });
   const firstStyle: WidgetStyle = {
     size: {
-      left: 0.1,
-      width: 0.8,
-      top: 0.1,
-      height: 0.5,
+      left: "100px",
+      width: "80% - 100px",
+      top: "100px",
+      height: "500px",
     },
     padding: "100px 50px 20px 100px",
     backgroundColor: "#ff0000",
     borderRadius: 30,
+    opacity: 0.9,
     grabbable: true,
     hover: {
       borderColor: "#0000ff",
