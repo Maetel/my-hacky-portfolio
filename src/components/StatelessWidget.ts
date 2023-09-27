@@ -84,7 +84,7 @@ export default class StatelessWidget extends Area {
           this.parent.innerPaddingL -
           this.parent.innerPaddingR
         : this.screenWidth);
-    const segments = [];
+    const segments: string[] = [];
     let segment = "";
     const textWritableWidth =
       maxWidth - this.innerPaddingL - this.innerPaddingR;
