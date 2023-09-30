@@ -1,5 +1,5 @@
 import { notNullish } from "@/utils";
-import StatelessWidget from "./StatelessWidget";
+import Widget from "./Widget";
 import WidgetStyle from "./WidgetStyle";
 import error from "@/class/IError";
 import Store, {
@@ -13,15 +13,15 @@ export default class WidgetManager {
   static highestZ: number = 0;
   static updateIds: string[] = [];
   static _addedOrder = 0;
-  static _widgets: StatelessWidget[] = [];
+  static _widgets: Widget[] = [];
   static get widgets() {
     return WidgetManager._widgets;
   }
-  static set widgets(widgets: StatelessWidget[]) {
+  static set widgets(widgets: Widget[]) {
     WidgetManager._widgets = widgets;
   }
 
-  static push(...args: StatelessWidget[]) {
+  static push(...args: Widget[]) {
     // console.log("pushed : ", args[0].id, " n : ", args.length);
     args.forEach((widget) => {
       WidgetManager._push(widget);
@@ -29,7 +29,7 @@ export default class WidgetManager {
     return this;
   }
 
-  static _push(widget: StatelessWidget) {
+  static _push(widget: Widget) {
     this._widgets.some((w) => w.id === widget.id) &&
       error("Widget already exists : ", { id: widget.id });
 
@@ -75,7 +75,7 @@ export default class WidgetManager {
     });
   }
 
-  static of(x: number, y: number): StatelessWidget | null {
+  static of(x: number, y: number): Widget | null {
     const widgets = WidgetManager._widgets;
     for (let i = widgets.length - 1; i >= 0; i--) {
       const widget = widgets[i];
@@ -86,15 +86,15 @@ export default class WidgetManager {
     return null;
   }
 
-  static id(id: string): StatelessWidget | null {
+  static id(id: string): Widget | null {
     return WidgetManager._widgets.find((widget) => widget.id === id) ?? null;
   }
 
-  static pop(): StatelessWidget | null {
+  static pop(): Widget | null {
     return WidgetManager._widgets.pop() ?? null;
   }
 
-  static async remove(id: string): Promise<StatelessWidget | null> {
+  static async remove(id: string): Promise<Widget | null> {
     return deleteWidget(id);
   }
 
@@ -115,14 +115,12 @@ function sortWidgets() {
   Store.rerender?.();
 }
 
-async function deleteWidget(
-  widget: StatelessWidget | string
-): Promise<StatelessWidget | null> {
+async function deleteWidget(widget: Widget | string): Promise<Widget | null> {
   return new Promise((resolve, reject) => {
     const predicate =
       typeof widget === "string"
-        ? (w: StatelessWidget) => w.id === widget
-        : (w: StatelessWidget) => w.id !== widget.id;
+        ? (w: Widget) => w.id === widget
+        : (w: Widget) => w.id !== widget.id;
     const widgetFound = WidgetManager.widgets.find(predicate);
     if (widgetFound) {
       widgetFound.delete().then((w) => {
@@ -136,7 +134,7 @@ async function deleteWidget(
   });
 }
 
-function removeWidgetFromList(widget: StatelessWidget) {
+function removeWidgetFromList(widget: Widget) {
   WidgetManager.widgets = WidgetManager.widgets.filter(
     (w) => w.id !== widget.id
   );

@@ -1,30 +1,67 @@
 export type TreeSearchType = "BFS" | "DFS_ChildrenFirst" | "DFS_ParentFirst";
 export default class Tree {
-  static find<T>(
+  // return undefined if not found any
+  static findAll<T>(
     root: T,
     predicate: (node: T) => boolean,
     type: TreeSearchType = "BFS"
-  ): T | undefined {
-    let found = undefined;
+  ): T[] | undefined {
+    let found: T[] = [];
     switch (type) {
       case "BFS":
         BFS(root, (w) => {
           if (predicate(w)) {
-            found = w;
+            found.concat(w);
           }
         });
         break;
       case "DFS_ChildrenFirst":
         DFS_ChildrenFirst(root, (w) => {
           if (predicate(w)) {
-            found = w;
+            found.concat(w);
           }
         });
         break;
       case "DFS_ParentFirst":
         DFS_ParentFirst(root, (w) => {
           if (predicate(w)) {
+            found.concat(w);
+          }
+        });
+        break;
+    }
+    return found.length > 0 ? found : undefined;
+  }
+
+  static find<T>(
+    root: T,
+    predicate: (node: T) => boolean,
+    type: TreeSearchType = "BFS"
+  ): T | undefined {
+    let stop = false;
+    let found = undefined;
+    switch (type) {
+      case "BFS":
+        BFS(root, (w) => {
+          if (!stop && predicate(w)) {
             found = w;
+            stop = true;
+          }
+        });
+        break;
+      case "DFS_ChildrenFirst":
+        DFS_ChildrenFirst(root, (w) => {
+          if (!stop && predicate(w)) {
+            found = w;
+            stop = true;
+          }
+        });
+        break;
+      case "DFS_ParentFirst":
+        DFS_ParentFirst(root, (w) => {
+          if (!stop && predicate(w)) {
+            found = w;
+            stop = true;
           }
         });
         break;
@@ -48,6 +85,14 @@ export default class Tree {
         DFS_ParentFirst(root, cb);
         break;
     }
+  }
+
+  static removeAll<T>(
+    root: T,
+    predicate: (node: T) => boolean,
+    type: TreeSearchType = "DFS_ChildrenFirst"
+  ) {
+    Tree.findAll(root, predicate, type)?.forEach((w) => w.delete?.());
   }
 }
 

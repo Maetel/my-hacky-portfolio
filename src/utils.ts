@@ -1,3 +1,7 @@
+export function as<T extends U, U>(obj: U): T {
+  return obj as T;
+}
+
 export const parsePx = (basePx: number, length: number | string) => {
   if (typeof length === "number") {
     return basePx * length;

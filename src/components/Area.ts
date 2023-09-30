@@ -25,6 +25,7 @@ export const AreaAlignType = {
   right: 2,
   bottom: 2,
   center: 3,
+  inherit: 4,
 } as const;
 
 export type AreaAlign = keyof typeof AreaAlignType;

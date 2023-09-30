@@ -1,5 +1,5 @@
 import { Area, AreaInputSize } from "./Area";
-import WidgetStyle from "./WidgetStyle";
+import WidgetStyle, { DefaultStyle } from "./WidgetStyle";
 import TimerJob from "./TimerJob";
 import WidgetState from "@/class/WidgetState";
 import error from "@/class/IError";
@@ -7,7 +7,7 @@ import Store from "@/class/Store";
 import { parsePx } from "@/utils";
 import * as C from "@/constants";
 
-export const DefaultStatelessWidgetStyle: WidgetStyle = {
+export const DefaultWidgetStyle: WidgetStyle = {
   horAlign: "left",
   verAlign: "top",
   position: "relative",
@@ -24,18 +24,15 @@ export const DefaultStatelessWidgetStyle: WidgetStyle = {
   color: "black",
 };
 
-export type WidgetCallback = (stls: StatelessWidget) => any;
+export type WidgetCallback = (stls: Widget) => any;
 export type OnDestoryWithoutCleanup = WidgetCallback;
-export type OnDestoryWithCleanup = (
-  stls: StatelessWidget,
-  cleanUp: () => any
-) => any;
+export type OnDestoryWithCleanup = (stls: Widget, cleanUp: () => any) => any;
 export type OnCreate = WidgetCallback;
-export interface StatelessWidgetOption {
-  parent?: StatelessWidget;
+export interface WidgetOption {
+  parent?: Widget;
   style?: WidgetStyle;
   id?: string;
-  copiedFrom?: StatelessWidget;
+  copiedFrom?: Widget;
   callbacks?: WidgetCallbacks;
   text?: string;
 }
@@ -48,16 +45,16 @@ export type WidgetCallbacks = {
   onDestroyWithCleanup?: OnDestoryWithCleanup;
 };
 
-export default class StatelessWidget extends Area {
+export default class Widget extends Area {
   addOrder: number;
   _speak: string[] = [];
-  copiedFrom?: StatelessWidget;
+  copiedFrom?: Widget;
   id: string;
-  parent: StatelessWidget | null = null;
-  children: StatelessWidget[] = [];
+  parent: Widget | null = null;
+  children: Widget[] = [];
   _style: WidgetStyle;
   timerJob?: TimerJob;
-  inputOption?: StatelessWidgetOption;
+  inputOption?: WidgetOption;
   _callbacks: WidgetCallbacks;
   text?: string;
 
@@ -109,10 +106,10 @@ export default class StatelessWidget extends Area {
     return segments;
   }
 
-  constructor(option?: StatelessWidgetOption) {
+  constructor(option?: WidgetOption) {
     const { parent, style: inputStyle, id, copiedFrom } = option;
     const style = {
-      ...DefaultStatelessWidgetStyle,
+      ...DefaultStyle,
       ...(inputStyle ? { ...inputStyle } : {}),
     };
     const size = {
@@ -158,11 +155,7 @@ export default class StatelessWidget extends Area {
       children: [...this.children],
     };
   }
-  animate(
-    ms: number,
-    start: (w: StatelessWidget) => any,
-    cleanup?: (w: StatelessWidget) => any
-  ) {
+  animate(ms: number, start: (w: Widget) => any, cleanup?: (w: Widget) => any) {
     if (cleanup) {
       this.timerJob = new TimerJob();
       this.timerJob.timeout(ms, () => {
@@ -200,8 +193,8 @@ export default class StatelessWidget extends Area {
   }
 
   //@override
-  copied(id?: string): StatelessWidget {
-    const retval = new StatelessWidget({
+  copied(id?: string): Widget {
+    const retval = new Widget({
       ...this.buildOption(),
       id: id ?? `${this.id}-copy`,
       copiedFrom: this,
@@ -209,7 +202,7 @@ export default class StatelessWidget extends Area {
     return retval;
   }
 
-  addChild(child: StatelessWidget) {
+  addChild(child: Widget) {
     child.parent = this;
     this.children.push(child);
     console.log("Added child : ", child.id);
@@ -217,12 +210,12 @@ export default class StatelessWidget extends Area {
     return this;
   }
 
-  addChildren(...children: StatelessWidget[]) {
+  addChildren(...children: Widget[]) {
     children.forEach(this.addChild.bind(this));
     return this;
   }
 
-  async deleteChild(child: StatelessWidget) {
+  async deleteChild(child: Widget) {
     if (!this.children.some((c) => c.id === child.id)) {
       error("Cannot find child : ", { child });
     }
@@ -234,6 +227,7 @@ export default class StatelessWidget extends Area {
   }
 
   async delete() {
+    console.log("Delete : ", this.id);
     return new Promise(async (resolve) => {
       return this.deleteAllChildren().then(() => {
         if (this._callbacks.onDestroyWithCleanup) {
@@ -326,10 +320,10 @@ export default class StatelessWidget extends Area {
   }
 
   get sibilings(): {
-    left: StatelessWidget[];
-    right: StatelessWidget[];
-    top: StatelessWidget[];
-    bottom: StatelessWidget[];
+    left: Widget[];
+    right: Widget[];
+    top: Widget[];
+    bottom: Widget[];
   } {
     if (!this.parent) {
       return {
@@ -576,5 +570,9 @@ export default class StatelessWidget extends Area {
     }
 
     return relativeB;
+  }
+
+  as<T extends Widget>() {
+    return this as unknown as T;
   }
 }

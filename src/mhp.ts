@@ -15,7 +15,7 @@ import * as s from "./styles";
 import { defaultCommands } from "./class/Command";
 import VERSION from "./VERSION";
 import BasicCanvas from "./components/BasicCanvas";
-import StatelessWidget from "./components/StatelessWidget";
+import Widget from "./components/Widget";
 import WidgetManager from "./components/WidgetManager";
 import WidgetStyle, { background } from "./components/WidgetStyle";
 import Animation, {
@@ -90,8 +90,8 @@ class MHPCanvas extends BasicCanvas {
     // this.run();
   }
 
-  pointerMoveOn: StatelessWidget | null = null;
-  pointerDownOn: StatelessWidget | null = null;
+  pointerMoveOn: Widget | null = null;
+  pointerDownOn: Widget | null = null;
   // pointerUpOn: StatelessWidget | null = null;
 
   // @override
@@ -160,7 +160,7 @@ class MHPCanvas extends BasicCanvas {
   ////////////////////////////////////////////////////////
   // handle events
 
-  handleClick(widget: StatelessWidget) {
+  handleClick(widget: Widget) {
     this.pointerDownOn?.onClick?.(widget);
   }
 
@@ -302,7 +302,7 @@ class MHPCanvas extends BasicCanvas {
     return animId ?? anim.id;
   }
 
-  handlePointerUp(widget: StatelessWidget) {
+  handlePointerUp(widget: Widget) {
     // console.log({ d: this.pointerDownOn?.id, u: widget?.id });
     if (this.pointerDownOn?.id === widget?.id) {
       this.handleClick(widget);
@@ -354,7 +354,7 @@ class MHPCanvas extends BasicCanvas {
     return false;
   }
 
-  _renderWidget(widget: StatelessWidget) {
+  _renderWidget(widget: Widget) {
     // 1. render self
     if (!widget.style.visible) {
       return;

@@ -1,23 +1,58 @@
 import error from "@/class/IError";
 import { AreaInputSize } from "./Area";
 
+export type Omittable = null | undefined;
+export type Inherit = "inherit";
+
+export const DefaultStyle: WidgetStyle = {
+  size: {
+    width: "100%",
+  },
+  verAlign: "inherit",
+  horAlign: "inherit",
+  backgroundColor: "inherit",
+  borderWidth: 0,
+  borderRadius: 0,
+  borderColor: "transparent",
+  visible: "inherit",
+  zIndex: "inherit",
+  grabbable: false,
+  position: "relative",
+  padding: "0px",
+  opacity: 1,
+  cursor: "inherit",
+  font: "inherit",
+  lineHeight: "inherit",
+  textAlign: "inherit",
+  fontSize: "inherit",
+  fontWeight: "inherit",
+  fontStyle: "inherit",
+  display: "block",
+  flexDirection: null,
+  hover: null,
+  pointerDown: null,
+  pointerUp: null,
+  color: "inherit",
+  margin: "0px",
+  showScrollBar: false,
+  overflowX: "grow",
+  overflowY: "grow",
+} as const;
+
 export default interface WidgetStyle {
   size?: AreaInputSize;
-  verAlign?: "top" | "center" | "bottom";
-  horAlign?: "left" | "center" | "right";
-  backgroundColor?: string | CanvasGradient | CanvasPattern;
-  borderWidth?: number;
-  borderRadius?: number;
-  borderColor?: string | CanvasGradient | CanvasPattern;
-  visible?: boolean;
-  zIndex?: number;
+  verAlign?: "top" | "center" | "bottom" | Inherit;
+  horAlign?: "left" | "center" | "right" | Inherit;
+  backgroundColor?: string | CanvasGradient | CanvasPattern | Inherit;
+  borderWidth?: number | Inherit;
+  borderRadius?: number | Inherit;
+  borderColor?: string | CanvasGradient | CanvasPattern | Inherit;
+  visible?: boolean | Inherit;
+  zIndex?: number | Inherit;
   grabbable?: boolean;
   position?: "relative" | "absolute" | "global";
   padding?: string;
-  opacity?: number;
-  hover?: WidgetStyle;
-  pointerDown?: WidgetStyle;
-  pointerUp?: WidgetStyle;
+  opacity?: number | Inherit;
   cursor?:
     | "pointer"
     | "default"
@@ -27,21 +62,28 @@ export default interface WidgetStyle {
     | "grab"
     | "grabbing"
     | "zoom-in"
-    | "zoom-out";
-  font?: string;
-  lineHeight?: number;
-  textAlign?: "left" | "center" | "right";
-  fontSize?: number; //px
-  fontWeight?: number;
-  fontStyle?: string;
+    | "zoom-out"
+    | Inherit;
+  font?: string | Inherit;
+  lineHeight?: number | Inherit;
+  textAlign?: "left" | "center" | "right" | Inherit;
+  fontSize?: number | Inherit; //px
+  fontWeight?: number | Inherit;
+  fontStyle?: string | Inherit;
   display?: "block" | "flex";
-  flexDirection?: "row" | "column";
+  flexDirection?: "row" | "column" | Omittable;
+
+  // on action
+  hover?: WidgetStyle | Omittable;
+  pointerDown?: WidgetStyle | Omittable;
+  pointerUp?: WidgetStyle | Omittable;
 
   // TODOS
-  color?: string;
+  color?: string | Inherit;
   margin?: string;
-  scrollable?: boolean; // default true, if false, same as overflow: hidden
   showScrollBar?: boolean;
+  overflowX?: "grow" | "hidden" | "scroll";
+  overflowY?: "grow" | "hidden" | "scroll";
 }
 
 export const background = (

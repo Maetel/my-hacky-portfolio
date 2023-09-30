@@ -1,6 +1,6 @@
 import Store from "./class/Store";
 import StatefulWidget from "./components/StatefulWidget";
-import StatelessWidget from "./components/StatelessWidget";
+import Widget from "./components/Widget";
 import WidgetManager, {
   widgetIds,
   widgets,
@@ -83,7 +83,7 @@ export function initWidgets() {
     opacity: 0.5,
     // position: "relative",
   };
-  const first = new StatelessWidget({
+  const first = new Widget({
     style: firstStyle,
   });
   first.addChild(
@@ -108,7 +108,7 @@ export function initWidgets() {
     })
   );
   first.addChild(
-    new StatelessWidget({
+    new Widget({
       text: "This is my text",
       style: thirdStyle,
     })
