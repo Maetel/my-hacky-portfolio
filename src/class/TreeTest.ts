@@ -47,7 +47,13 @@ const createTree = () => {
 
   const w2 = new Widget({ id: "w2" });
   w2.addChildren(
-    new Widget({ id: "w2_1" }).addChildren(
+    new Widget({
+      id: "w2_1",
+      style: {
+        font: "Arial",
+      },
+    }).addChildren(
+      new Widget({ id: "w2_1_3", style: { font: "inherit" } }),
       new Widget({ id: "w2_1_1" }),
       new Widget({ id: "w2_1_2" })
     ),
@@ -87,6 +93,9 @@ export default function testTree() {
   // );
 
   // debugger;
+  const now = Date.now();
   const vdom = new VDOM(root);
+  const elapsed = Date.now() - now;
+  console.log({ elapsed });
   // vdom.inflate();
 }

@@ -53,14 +53,17 @@ class InflatedWidget {
           });
         }
         const usableValue = topParent.inflatedStyle[key];
-        console.log({
-          key,
-          v,
-          id: this.id,
-          depth,
-          topParent: topParent.id,
-          usableValue,
-        });
+        // if (topParent.id !== "root") {
+        //   console.log({
+        //     key,
+        //     topParent: topParent.id,
+        //     usableValue,
+        //     v,
+        //     id: this.id,
+        //     depth,
+        //   });
+        // }
+
         style[key] = usableValue;
       }
 

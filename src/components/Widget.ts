@@ -7,23 +7,6 @@ import Store from "@/class/Store";
 import { parsePx } from "@/utils";
 import * as C from "@/constants";
 
-export const DefaultWidgetStyle: WidgetStyle = {
-  horAlign: "left",
-  verAlign: "top",
-  position: "relative",
-  display: "block",
-  visible: true,
-  cursor: "default",
-  opacity: 1,
-  backgroundColor: "transparent",
-  font: "Arial",
-  fontStyle: "normal",
-  fontWeight: 400,
-  fontSize: 16,
-  textAlign: "left",
-  color: "black",
-};
-
 export type WidgetCallback = (stls: Widget) => any;
 export type OnDestoryWithoutCleanup = WidgetCallback;
 export type OnDestoryWithCleanup = (stls: Widget, cleanUp: () => any) => any;
@@ -574,5 +557,19 @@ export default class Widget extends Area {
 
   as<T extends Widget>() {
     return this as unknown as T;
+  }
+
+  // returns parent if found
+  get parents(): Widget[] | null {
+    let retval = [];
+    let parent = this.parent;
+    while (parent) {
+      retval.push(parent);
+      parent = parent.parent;
+    }
+    return retval.length > 0 ? retval : null;
+  }
+  childOf(id: string): Widget | null {
+    return this.parents?.find((p) => p.id === id);
   }
 }
