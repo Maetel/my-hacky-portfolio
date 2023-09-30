@@ -30,6 +30,7 @@ import StatefulWidget, {
 } from "./components/StatefulWidget";
 import error from "./class/IError";
 import Store, { STORE_RERENDER } from "./class/Store";
+import TreeTest from "@/class/TreeTest";
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -42,8 +43,7 @@ const mobileSlicer = (array: any[]) => {
 };
 const widgets = () => WidgetManager.widgets;
 const wmgr = WidgetManager;
-
-window.onload = () => {
+const initMHP = () => {
   const theCanvasElement = document.getElementById(
     "theCanvas"
   ) as HTMLCanvasElement;
@@ -61,6 +61,9 @@ window.onload = () => {
   initWidgets();
   theCanvas.run();
 };
+
+// window.onload = initMHP;
+window.onload = TreeTest;
 
 class MHPCanvas extends BasicCanvas {
   static version = VERSION;

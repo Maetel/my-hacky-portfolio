@@ -2,7 +2,7 @@ export default class Store {
   static _store: Map<string | number, any> = new Map();
   static get(key: string | number) {
     const retval = Store._store.get(key);
-    if (retval === undefined) {
+    if (false && retval === undefined) {
       throw new Error(`Store.get() : key not found : ${key}`);
     }
     return retval;

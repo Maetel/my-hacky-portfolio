@@ -112,7 +112,7 @@ function sortWidgets() {
     }
     return a._style.zIndex - b._style.zIndex;
   });
-  Store.rerender();
+  Store.rerender?.();
 }
 
 async function deleteWidget(

@@ -219,6 +219,7 @@ export default class StatelessWidget extends Area {
 
   addChildren(...children: StatelessWidget[]) {
     children.forEach(this.addChild.bind(this));
+    return this;
   }
 
   async deleteChild(child: StatelessWidget) {
