@@ -1,9 +1,14 @@
 import { clientHeight, clientWidth } from "@/utils";
-import { EmptyFourWayPixels, RenderableSize } from "./Renderable";
+import {
+  EmptyFourWayPixels,
+  RenderableSize,
+  RenderableCoord,
+} from "./Renderable";
 
 export default class CanvasObserver {
   private theCanvas: HTMLCanvasElement = null;
-  cached: RenderableSize = null;
+  cachedSize: RenderableSize = null;
+  cachedCoord: RenderableCoord = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.theCanvas = canvas;
@@ -11,21 +16,37 @@ export default class CanvasObserver {
 
   resize(canvas: HTMLCanvasElement) {
     this.theCanvas = canvas;
-    this.cached = null;
+    this.cachedSize = null;
+    this.cachedCoord = null;
+  }
+
+  get coord(): RenderableCoord {
+    if (this.cachedCoord) {
+      return this.cachedCoord;
+    }
+
+    const x = 0;
+    const y = 0;
+    const w = this.theCanvas.width;
+    const h = this.theCanvas.height;
+    this.cachedCoord = {
+      x,
+      y,
+      right: w,
+      bottom: h,
+    };
+
+    return this.cachedCoord;
   }
 
   get size(): RenderableSize {
-    if (this.cached) {
-      return this.cached;
+    if (this.cachedSize) {
+      return this.cachedSize;
     }
 
     const w = this.theCanvas.width;
     const h = this.theCanvas.height;
-    this.cached = {
-      x: 0,
-      y: 0,
-      right: w,
-      bottom: h,
+    this.cachedSize = {
       innerWidth: w,
       width: w,
       widthTotal: w,
@@ -37,8 +58,9 @@ export default class CanvasObserver {
       childrenFlexTotal: 0,
       texts: [],
       maxTextWidth: 0,
+      totalTextHeight: 0,
     };
 
-    return this.cached;
+    return this.cachedSize;
   }
 }

@@ -18,17 +18,51 @@ export function initWidgets() {
       size: {
         left: "100px",
         top: "100px",
-        width: "100px",
-        height: "30px",
+        // width: "300px",
+        height: "300px",
       },
-      // padding: "10px",
-      color: "red",
+      padding: "50px",
+      color: "white",
       // borderRadius: 20,
-      backgroundColor: "transparent",
-      zIndex: 1,
+      backgroundColor: "red",
     },
   });
   console.log({ w1 });
+  const w2 = new Widget({
+    parent: w1,
+    text: "w2",
+    id: "w2",
+    style: {
+      // size: {
+      //   left: "100px",
+      //   top: "100px",
+      //   width: "300px",
+      //   height: "300px",
+      // },
+      margin: "10px 0px",
+      padding: "50px",
+      color: "black",
+      // borderRadius: 20,
+      backgroundColor: "blue",
+    },
+  });
+  const w3 = new Widget({
+    parent: w1,
+    text: "w3",
+    id: "w3",
+    style: {
+      size: {
+        left: "-50px",
+        top: "-50px",
+        width: "100px",
+        height: "100px",
+      },
+      padding: "10px",
+      color: "black",
+      // borderRadius: 20,
+      backgroundColor: "green",
+    },
+  });
 }
 export function _initWidgets() {
   // console.log("called");

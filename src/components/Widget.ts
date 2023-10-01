@@ -53,9 +53,9 @@ export default class Widget extends Area {
   constructor(option?: WidgetOption) {
     const { parent: inputParent, style: inputStyle, id, copiedFrom } = option;
     const parent =
-      inputParent && option?.id !== "root" ? inputParent : RootWidget;
+      inputParent && option?.id !== "root" ? inputParent : RootWidget.theRoot;
     const style = {
-      ...DefaultStyle,
+      // ...DefaultStyle,
       ...(inputStyle ? { ...inputStyle } : {}),
     };
     if (option?.id === "w1") {
@@ -272,32 +272,34 @@ export default class Widget extends Area {
   }
 }
 
-var RootWidget = new Widget({
-  style: {
-    ...DefaultStyle,
-    size: {
-      left: 0,
-      top: 0,
-      width: 1,
-      height: 1,
+class RootWidget {
+  static theRoot = new Widget({
+    style: {
+      ...DefaultStyle,
+      size: {
+        left: 0,
+        top: 0,
+        width: 1,
+        height: 1,
+      },
+      verAlign: "top",
+      horAlign: "left",
+      backgroundColor: "#b0b0b0",
+      visible: true,
+      zIndex: 0,
+      cursor: "default",
+      font: C.System.font,
+      lineHeight: C.System.lineHeight,
+      textAlign: "left",
+      fontSize: C.System.fontSize,
+      fontWeight: 400,
+      fontStyle: "#000000",
+      color: "#000000",
+      position: "global",
     },
-    verAlign: "top",
-    horAlign: "left",
-    backgroundColor: "#b0b0b0",
-    visible: true,
-    zIndex: 0,
-    cursor: "default",
-    font: C.System.font,
-    lineHeight: C.System.lineHeight,
-    textAlign: "left",
-    fontSize: C.System.fontSize,
-    fontWeight: 400,
-    fontStyle: "#000000",
-    color: "#000000",
-    position: "global",
-  },
-  parent: null,
-  id: "root",
-});
+    parent: null,
+    id: "root",
+  });
+}
 
-export var getRootWidget = () => RootWidget;
+export var getRootWidget = () => RootWidget.theRoot;

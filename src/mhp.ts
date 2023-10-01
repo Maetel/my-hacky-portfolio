@@ -298,7 +298,7 @@ class MHPCanvas extends BasicCanvas {
     console.log("Rendering:", w.id);
     this.ctx.save();
 
-    const size = w.globalSize(this.ctx);
+    const size = w.renderData(this.ctx);
     const style = w.style;
 
     // 0. clip first
@@ -426,38 +426,38 @@ class MHPCanvas extends BasicCanvas {
 
   // @override
   _run(timestamp: number) {
-    try {
-      this.dt = timestamp - this.lastTimestamp;
-      this.lastTimestamp = timestamp;
+    // try {
+    this.dt = timestamp - this.lastTimestamp;
+    this.lastTimestamp = timestamp;
 
-      //content
-      // this.doOnce(this.render.bind(this));
-      // this.logOnce(0, "logonce rendered", timestamp);
+    //content
+    // this.doOnce(this.render.bind(this));
+    // this.logOnce(0, "logonce rendered", timestamp);
 
-      this.handleTimerJobs();
-      this.handleAnimation();
+    this.handleTimerJobs();
+    this.handleAnimation();
 
-      if (this.updateScreen()) {
-        const { x, y, w, h } = this.findUpdateArea();
-        // this.ctx.clearRect(x, y, w, h);
-        this.render();
-        // this.clearBase();
-      } else {
-        this.showIdle();
-      }
-
-      if (true) {
-        this.renderFPS();
-        this.showWidgets();
-      }
-
-      //!content
-
-      this.currentAnimation = requestAnimationFrame(this._run.bind(this));
-    } catch (e) {
-      console.log(e);
-      debugger;
+    if (this.updateScreen()) {
+      const { x, y, w, h } = this.findUpdateArea();
+      // this.ctx.clearRect(x, y, w, h);
+      this.render();
+      // this.clearBase();
+    } else {
+      this.showIdle();
     }
+
+    if (true) {
+      this.renderFPS();
+      this.showWidgets();
+    }
+
+    //!content
+
+    this.currentAnimation = requestAnimationFrame(this._run.bind(this));
+    // } catch (e) {
+    //   console.log(e);
+    //   debugger;
+    // }
   }
 
   handleAnimation() {

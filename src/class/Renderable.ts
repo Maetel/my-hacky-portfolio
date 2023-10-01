@@ -17,11 +17,13 @@ export type RenderableText = {
   width: number;
   yOffset: number;
 };
-export type RenderableSize = {
+export type RenderableCoord = {
   x: number;
   y: number;
   right: number;
   bottom: number;
+};
+export type RenderableSize = {
   innerWidth: number; // exclude padding
   width: number; // innerWidth + padding
   widthTotal: number; // innerWidth + padding + margin
@@ -33,4 +35,5 @@ export type RenderableSize = {
   childrenFlexTotal: number;
   texts: RenderableText[];
   maxTextWidth: number;
+  totalTextHeight: number;
 };
