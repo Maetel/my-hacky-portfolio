@@ -14,10 +14,10 @@ export function initWidgets() {
     text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w1",
     style: {
-      // position: "global",
+      position: "global",
       size: {
-        // left: "100px",
-        // top: "100px",
+        left: "100px",
+        top: "100px",
         // width: "300px",
         // height: "300px",
       },
@@ -25,6 +25,8 @@ export function initWidgets() {
       color: "white",
       // borderRadius: 20,
       backgroundColor: "red",
+      display: "flex",
+      flexDirection: "row",
     },
   });
   console.log({ w1 });
@@ -59,7 +61,7 @@ export function initWidgets() {
       },
       padding: "10px",
       color: "black",
-      position: "global",
+      // position: "relative",
       // borderRadius: 20,
       backgroundColor: "green",
     },
