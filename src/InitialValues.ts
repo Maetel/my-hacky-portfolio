@@ -11,6 +11,7 @@ import WidgetStyle from "./components/WidgetStyle";
 export function initWidgets() {
   console.log("initWidgets");
   const w1 = new Widget({
+    text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w1",
     style: {
       position: "global",
@@ -18,10 +19,12 @@ export function initWidgets() {
         left: "100px",
         top: "100px",
         width: "100px",
-        height: "100px",
+        height: "30px",
       },
-      borderRadius: 20,
-      backgroundColor: "#ff0000",
+      // padding: "10px",
+      color: "red",
+      // borderRadius: 20,
+      backgroundColor: "transparent",
       zIndex: 1,
     },
   });

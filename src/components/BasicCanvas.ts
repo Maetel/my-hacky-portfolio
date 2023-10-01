@@ -57,6 +57,7 @@ export default class BasicCanvas extends EventInput {
     this.ctx.lineTo(x, y + borderRadius);
     this.ctx.quadraticCurveTo(x, y, x + borderRadius, y);
     this.ctx.closePath();
+    this.ctx.clip();
   }
 
   run(timestamp?: number) {

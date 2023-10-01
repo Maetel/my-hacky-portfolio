@@ -112,6 +112,9 @@ export class InflatedWidget {
       ...widget.style,
     };
     this.id = widget.id;
+    if (this.id === "w1") {
+      console.log("w1 style : ", { ...widget.style });
+    }
     this.parent = parent;
     this.children = widget.children.map((w) => new InflatedWidget(w, this));
   }
@@ -210,8 +213,10 @@ export class InflatedWidget {
       return this._globalSize;
     }
 
-    const screenWidth = clientWidth();
-    const screenHeight = clientHeight();
+    // const screenWidth = clientWidth();
+    // const screenHeight = clientHeight();
+    const screenWidth = VDOM.canvasSize.width;
+    const screenHeight = VDOM.canvasSize.height;
     const s = this.inflatedStyle;
     // 2-1. padding
     const padding = {
@@ -270,50 +275,48 @@ export class InflatedWidget {
       textWritableWidth: number,
       style: WidgetStyle
     ): RenderableText[] => {
-      const prevFont = ctx.font;
-      const fontSize = style.fontSize ?? C.System.fontSize;
+      ctx.save();
+      const fontSize = (style.fontSize ?? C.System.fontSize) as number;
       const font = style.font ?? C.System.font;
-      const lineheight = style.lineHeight as number;
-      ctx.font = `${fontSize}px ${font}`;
+      const lineheight = (style.lineHeight ??
+        fontSize ??
+        C.System.lineHeight) as number;
+      const fontCombo = `${fontSize}px ${font}`;
+      console.log(this.id, "fontCombo : ", fontCombo);
+      ctx.font = fontCombo;
 
       const totalText = text ?? "";
       const texts: RenderableText[] = [];
       // const segments: string[] = [];
       let segment = "";
       let textIdx = 0;
-      for (let i = 0; i < totalText.length; i++) {
-        // this.speak("getTextHeight", { i, char: totalText[i] });
-        if (totalText[i] === "\n") {
-          texts.push({
-            index: textIdx++,
-            text: segment,
-            width: ctx.measureText(segment).width,
-            yOffset: lineheight * textIdx,
-          });
-          segment = "";
-          continue;
-        }
-        segment += totalText[i];
-        const textWidth = ctx.measureText(segment).width;
-        if (textWidth > textWritableWidth) {
-          texts.push({
-            index: textIdx++,
-            text: segment,
-            width: ctx.measureText(segment).width,
-            yOffset: lineheight * textIdx,
-          });
-          segment = "";
-        }
-      }
-      if (segment.length > 0) {
+      const pushSegment = () => {
         texts.push({
-          index: textIdx++,
+          index: textIdx,
           text: segment,
           width: ctx.measureText(segment).width,
           yOffset: lineheight * textIdx,
         });
+        segment = "";
+        textIdx++;
+      };
+      for (let i = 0; i < totalText.length; i++) {
+        // this.speak("getTextHeight", { i, char: totalText[i] });
+        if (totalText[i] === "\n") {
+          pushSegment();
+          continue;
+        }
+        segment += totalText[i];
+        const textWidth =
+          ctx.measureText(segment).width + C.System.textMinPadding;
+        if (textWidth >= textWritableWidth) {
+          pushSegment();
+        }
       }
-      ctx.font = prevFont;
+      if (segment.length > 0) {
+        pushSegment();
+      }
+      ctx.restore();
       return texts;
     };
     const getParentSize = () =>
@@ -353,6 +356,8 @@ export class InflatedWidget {
         }, 0);
       } else {
         //grows
+        ctx.save();
+        ctx.font = `${s.fontSize}px ${s.font}`;
         const textWidth = ctx.measureText(this._widget.text).width;
         texts.push({
           index: 0,
@@ -361,6 +366,7 @@ export class InflatedWidget {
           yOffset: 0,
         });
         maxTextWidth = textWidth;
+        ctx.restore();
       }
     }
     const textHeightTotal = texts.length * (s.lineHeight as number);
@@ -370,14 +376,17 @@ export class InflatedWidget {
     const isFlex = display === "flex";
     if (position === "global") {
       if (isBlock) {
-        const width =
-          (fixedWidth
-            ? getFixedWidth()
-            : maxTextWidth + getRelChildrenWidthTotal()) + paddingHor;
-        const height =
-          (fixedHeight
-            ? getFixedHeight()
-            : textHeightTotal + getRelChildrenHeightTotal()) + paddingVer;
+        const width = fixedWidth
+          ? getFixedWidth()
+          : maxTextWidth + getRelChildrenWidthTotal() + paddingHor;
+        console.log({
+          width,
+          maxTextWidth,
+          relChild: getRelChildrenWidthTotal(),
+        });
+        const height = fixedHeight
+          ? getFixedHeight()
+          : textHeightTotal + getRelChildrenHeightTotal() + paddingVer;
         const inLeft = notNullish(s.size.left) && s.horAlign === "left";
         const inRight = notNullish(s.size.right) && s.horAlign === "right";
         const inTop = notNullish(s.size.top) && s.verAlign === "top";
@@ -457,6 +466,9 @@ export class InflatedWidget {
           texts,
           maxTextWidth,
         };
+        if (this.id === "w1") {
+          this.speakGlobalSize();
+        }
         return this._globalSize;
       }
       if (isFlex) {
@@ -622,6 +634,9 @@ export class InflatedWidget {
       margin,
       childrenFlexTotal,
     };
+  }
+  speakGlobalSize() {
+    console.log(`Global size of [${this.id}]`, { ...this._globalSize });
   }
 }
 

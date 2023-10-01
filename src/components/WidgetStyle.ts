@@ -5,9 +5,9 @@ export type Omittable = null | undefined;
 export type Inherit = "inherit";
 
 export const DefaultStyle: WidgetStyle = {
-  size: {
-    width: 1,
-  },
+  // size: {
+  //   width: 1,
+  // },
   verAlign: "inherit",
   horAlign: "inherit",
   backgroundColor: "inherit",

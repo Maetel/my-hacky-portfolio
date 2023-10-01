@@ -66,6 +66,19 @@ const initMHP = () => {
 window.onload = initMHP;
 // window.onload = TreeTest;
 
+type RulerOption = {
+  gridInterval: number;
+  lineColor: string;
+  highlightInterval: number;
+  highlightColor: string;
+};
+const DefaultRulerOption: RulerOption = {
+  gridInterval: 20,
+  lineColor: "#ddd",
+  highlightInterval: 5,
+  highlightColor: "#888",
+} as const;
+
 class MHPCanvas extends BasicCanvas {
   static version = VERSION;
   canvas: HTMLCanvasElement;
@@ -286,8 +299,13 @@ class MHPCanvas extends BasicCanvas {
     this.ctx.save();
 
     const size = w.globalSize(this.ctx);
-    console.log({ size });
     const style = w.style;
+
+    // 0. clip first
+    // this.ctx.beginPath();
+    // this.ctx.rect(size.x, size.y, size.width, size.height);
+    // this.ctx.clip();
+
     // 1. background
     this.ctx.fillStyle = style.backgroundColor;
     this.drawRoundedRect(
@@ -299,7 +317,24 @@ class MHPCanvas extends BasicCanvas {
     );
     this.ctx.fill();
 
+    // 2. texts
+    this.ctx.fillStyle = style.color;
+    this.ctx.font = `${style.fontSize}px ${style.font}`;
+    this.ctx.textBaseline = "ideographic";
+    const textX = size.x + size.padding.left;
+    const textYStart = size.y + size.padding.top + (style.lineHeight as number);
+    size.texts.forEach((t) => {
+      console.log({ fillStyle: this.ctx.fillStyle, font: this.ctx.font });
+      const { text, width, yOffset } = t;
+      console.log("Render text : ", { textX, textYStart, ...t });
+      this.ctx.fillText(text, textX, textYStart + yOffset);
+    });
+
     this.ctx.restore();
+
+    if (w.id === "root") {
+      this.drawRuler();
+    }
   }
 
   render() {
@@ -344,28 +379,11 @@ class MHPCanvas extends BasicCanvas {
     this.redraw();
   }
 
-  clearBase(
-    withRuler = true,
-    gridOption: {
-      gridInterval: number;
-      lineColor: string;
-      highlightInterval: number;
-      highlightColor: string;
-    } = {
-      gridInterval: 20,
-      lineColor: "#ddd",
-      highlightInterval: 5,
-      highlightColor: "#888",
-    }
-  ) {
-    this.ctx.clearRect(0, 0, this.width, this.height);
-    if (!withRuler) {
-      return;
-    }
-
+  drawRuler(rulerOption: RulerOption = DefaultRulerOption) {
     // Define the grid parameters
+    this.ctx.save();
     const { gridInterval, lineColor, highlightInterval, highlightColor } =
-      gridOption;
+      rulerOption;
     const prevStrokeStyle = this.ctx.strokeStyle;
     this.ctx.strokeStyle = lineColor;
 
@@ -395,6 +413,15 @@ class MHPCanvas extends BasicCanvas {
     }
 
     this.ctx.strokeStyle = prevStrokeStyle;
+    this.ctx.restore();
+  }
+
+  clearBase(withRuler = true, rulerOptions = DefaultRulerOption) {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    if (!withRuler) {
+      return;
+    }
+    this.drawRuler(rulerOptions);
   }
 
   // @override
@@ -413,8 +440,8 @@ class MHPCanvas extends BasicCanvas {
       if (this.updateScreen()) {
         const { x, y, w, h } = this.findUpdateArea();
         // this.ctx.clearRect(x, y, w, h);
-        // this.clearBase();
         this.render();
+        // this.clearBase();
       } else {
         this.showIdle();
       }

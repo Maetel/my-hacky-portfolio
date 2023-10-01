@@ -58,17 +58,20 @@ export default class Widget extends Area {
       ...DefaultStyle,
       ...(inputStyle ? { ...inputStyle } : {}),
     };
-    const size = {
-      left: 0,
-      top: 0,
-      width: 1,
-      height: 0,
-      right: undefined,
-      bottom: undefined,
-      ...(inputStyle?.size ? { ...inputStyle?.size } : {}),
-    };
-    //@ts-ignore
-    style.size = size;
+    if (option?.id === "w1") {
+      console.log("w1 ctor, inputstyle : ", { ...style });
+    }
+    // const size = {
+    //   left: 0,
+    //   top: 0,
+    //   width: 1,
+    //   height: 0,
+    //   right: undefined,
+    //   bottom: undefined,
+    //   ...(inputStyle?.size ? { ...inputStyle?.size } : {}),
+    // };
+    // //@ts-ignore
+    // style.size = size;
 
     const verAlign = style?.verAlign ?? (style?.size?.top ? "top" : "bottom");
     const horAlign = style?.horAlign ?? (style?.size?.left ? "left" : "right");
@@ -284,10 +287,10 @@ var RootWidget = new Widget({
     visible: true,
     zIndex: 0,
     cursor: "default",
-    font: "Arial",
-    lineHeight: 20,
+    font: C.System.font,
+    lineHeight: C.System.lineHeight,
     textAlign: "left",
-    fontSize: 20,
+    fontSize: C.System.fontSize,
     fontWeight: 400,
     fontStyle: "#000000",
     color: "#000000",

@@ -5,4 +5,6 @@ export const epsilon = 10e-6 as const;
 export const System = {
   fontSize: 16,
   font: "Arial",
+  lineHeight: 16,
+  textMinPadding: 4,
 };
