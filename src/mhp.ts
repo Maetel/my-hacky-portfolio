@@ -11,11 +11,9 @@ import {
   uuid,
 } from "./utils";
 import * as C from "./constants";
-import * as s from "./styles";
-import { defaultCommands } from "./class/Command";
 import VERSION from "./VERSION";
 import BasicCanvas from "./components/BasicCanvas";
-import Widget from "./components/Widget";
+import Widget, { getRootWidget } from "./components/Widget";
 import WidgetManager from "./components/WidgetManager";
 import WidgetStyle, { background } from "./components/WidgetStyle";
 import Animation, {
@@ -30,7 +28,10 @@ import StatefulWidget, {
 } from "./components/StatefulWidget";
 import error from "./class/IError";
 import Store, { STORE_RERENDER } from "./class/Store";
-import TreeTest from "@/class/TreeTest";
+import TreeTest, { createRoot } from "@/class/TreeTest";
+import VDOM, { InflatedWidget } from "./class/VirtualDOM";
+import Tree, { TreeSearchType } from "./class/Tree";
+
 let theCanvas: MHPCanvas;
 
 const isMobile = isMobileDevice();
@@ -62,19 +63,32 @@ const initMHP = () => {
   theCanvas.run();
 };
 
-// window.onload = initMHP;
-window.onload = TreeTest;
+window.onload = initMHP;
+// window.onload = TreeTest;
 
 class MHPCanvas extends BasicCanvas {
   static version = VERSION;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   currentAnimation: number = 0;
-
   areas: Area[] = [];
+  vdom: VDOM = null;
+
+  speakVDOM(msg: string, iterType: TreeSearchType = "BFS") {
+    Tree.iterate(
+      getRootWidget(),
+      (w) => {
+        console.log(msg, w.id);
+      },
+      iterType
+    );
+  }
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     super(canvas, width, height);
+    this.vdom = new VDOM(this.canvas);
+    this.speakVDOM("Canvas create : ");
+
     if (isMobile) {
     }
   }
@@ -98,23 +112,23 @@ class MHPCanvas extends BasicCanvas {
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
 
-    const prev = this.pointerMoveOn;
-    this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
-    const next = this.pointerMoveOn;
-    if (prev !== next) {
-      this.handleStateChange("onPointerMove", prev, next);
-    }
+    // const prev = this.pointerMoveOn;
+    // this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
+    // const next = this.pointerMoveOn;
+    // if (prev !== next) {
+    //   this.handleStateChange("onPointerMove", prev, next);
+    // }
 
-    //find in reverse order
-    if (this.isDragging) {
-      // console.log("drag");
-      this.handleDrag();
-    } else {
-      // console.log("not drag");
-      this.canvas.style.cursor =
-        this.pointerMoveOn?.style?.hover?.cursor ?? "default";
-      // this.redraw();
-    }
+    // //find in reverse order
+    // if (this.isDragging) {
+    //   // console.log("drag");
+    //   this.handleDrag();
+    // } else {
+    //   // console.log("not drag");
+    //   this.canvas.style.cursor =
+    //     this.pointerMoveOn?.style?.hover?.cursor ?? "default";
+    //   // this.redraw();
+    // }
   }
   // input event overrides
 
@@ -171,93 +185,6 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const clicked = this.pointerDownOn;
-    if (clicked.id === "stls-1") {
-      const stful = asStateful(clicked);
-      const animId = "swing";
-      if (!stful.hasAnimation(animId)) {
-        this.addAnimation({
-          widget: stful,
-          duration: 3000,
-          everyFrame: (elapsed: number, dt: number) => {
-            const FPS = 1000 / dt;
-            // console.log({ elapsed });
-            clicked.moveY(10 * Math.sin(elapsed / 200));
-          },
-          onFinish: (elapsed, w) => {},
-          animId,
-          returnOnFinish: true,
-        });
-      } else {
-        console.log("already running : ", animId);
-      }
-    }
-
-    if (clicked.id === "stls-2") {
-      const stful = clicked;
-      const {
-        x: orgLeft,
-        y: orgTop,
-        w: orgWidth,
-        h: orgHeight,
-      } = stful.xywhRelative;
-      // console.log({ thirdLrwh: stful.lrwh });
-      const orgStyle = stful.style;
-
-      const jobId = "untiljob";
-      const jobTypeId = "untiljobType";
-      if (!Store.has(jobId)) {
-        Store.set(jobId, true);
-        Store.upsert(jobTypeId, (prev) => {
-          if (!prev) {
-            return "expand";
-          }
-          // return prev === "expand" ? "swing" : "expand";
-          return "expand";
-        });
-
-        const duration_ms = 3000;
-        const onEveryFrame = (elapsed) => {
-          const untilAnimation: "expand" | "swing" = Store.get(jobTypeId);
-
-          const dx = Math.sin(elapsed / 200) * 100;
-          switch (untilAnimation) {
-            case "expand":
-              stful.setLeftRelative(toPx(orgLeft - dx));
-              // stful.setWidth(toPx(orgWidth + 2 * dx));
-              // stful.setTop(toPx(orgTop + 50 + dx * 0.5));
-              // stful.setHeight(toPx(orgTop - dx));
-              break;
-            case "swing":
-              stful.setLeftRelative(toPx(orgLeft + dx));
-              break;
-          }
-
-          this.redraw();
-        };
-        const onUntiljobFinish = (elapsed) => {
-          console.log("until onFinish, Elapsed : ", elapsed);
-          // stful.setLeft(toPx(orgLeft));
-          // stful.setWidth(toPx(orgWidth));
-          stful.style = orgStyle;
-          console.log({
-            finalStfulLeft: stful.left,
-            orgStyleLeft: orgStyle.size.left,
-          });
-          switch (Store.get(jobTypeId)) {
-            case "expand":
-              stful.style.backgroundColor = "#a9039c";
-              break;
-            case "swing":
-              stful.style.backgroundColor = "#39ca90";
-              break;
-          }
-          this.redraw();
-          Store.delete(jobId);
-        };
-
-        this.until(duration_ms, onEveryFrame, onUntiljobFinish);
-      }
-    }
   }
 
   animations: Animation[] = [];
@@ -326,9 +253,9 @@ class MHPCanvas extends BasicCanvas {
       dy,
     } = this;
 
-    if (this.pointerDownOn.style?.grabbable) {
-      this.pointerDownOn.move(dx, dy);
-    }
+    // if (this.pointerDownOn.style?.grabbable) {
+    //   this.pointerDownOn.move(dx, dy);
+    // }
     this.redraw();
   }
 
@@ -354,129 +281,39 @@ class MHPCanvas extends BasicCanvas {
     return false;
   }
 
-  _renderWidget(widget: Widget) {
-    // 1. render self
-    if (!widget.style.visible) {
-      return;
-    }
+  _renderWidget(w: InflatedWidget) {
+    console.log("Rendering:", w.id);
+    this.ctx.save();
 
-    // update style
-    // const text = widget.text;
-    const textSegments = widget.getTextSegments(this.ctx);
-    const maxTextWidth = textSegments.reduce((acc, cur) => {
-      const curWidth = this.ctx.measureText(cur).width;
-      return acc > curWidth ? acc : curWidth;
-    }, 0);
-    const textWidth = maxTextWidth;
-    const singleLineHeight =
-      widget.style.lineHeight ??
-      (widget.style.fontSize ?? C.System.fontSize) * 1.1;
-    const textHeight = textSegments.length * singleLineHeight;
-    {
-      const { left, top, width, height, right, bottom } = widget.lrwh;
-
-      if (widget.addOrder === 1) {
-        widget.setSpeak("getTextHeight");
-        console.log({ textWidth, textHeight });
-      }
-      const virtualWidth =
-        textWidth + widget.innerPaddingL + widget.innerPaddingR;
-      const virtualHeight =
-        textHeight + widget.innerPaddingT + widget.innerPaddingB;
-      if (width < virtualWidth) {
-        widget.setWidth(toPx(virtualWidth));
-      }
-      if (height < virtualHeight) {
-        widget.setHeight(toPx(virtualHeight));
-      }
-    }
-    const { left, top, width, height, right, bottom } = widget.lrwh;
-    const pl = left + widget.innerPaddingL;
-    const pr = right - widget.innerPaddingR;
-    const pt = top + widget.innerPaddingT;
-    const pb = bottom - widget.innerPaddingB;
-
-    if ([1].includes(widget.addOrder)) {
-      console.log({ order: widget.addOrder, left, width, right });
-      console.log({ order: widget.addOrder, top, height, bottom });
-      // widget.setSpeak();
-    }
-
-    const hovered = this.pointerMoveOn?.id === widget.id;
-    const pointerDown = this.pointerDownOn?.id === widget.id;
-
-    let style = { ...widget.style };
-    if (pointerDown && widget.style.pointerDown) {
-      style = { ...style, ...widget.style.pointerDown };
-    } else if (hovered && widget.style.hover) {
-      style = { ...style, ...widget.style.hover };
-      // console.log({ hoverStyle: style });
-    }
-
-    // if (width === 0 || height === 0) {
-    //   return;
-    // }
-
-    const backgroundColor = background(style.backgroundColor, style.opacity);
-    // this.ctx.fillStyle = widget.style.backgroundColor ?? color;
-    const drawBorder = style.borderColor && style.borderWidth;
-    const prev = {
-      fillStyle: this.ctx.fillStyle,
-      strokeStyle: this.ctx.strokeStyle,
-      lineWidth: this.ctx.lineWidth,
-    };
-
-    this.ctx.fillStyle = backgroundColor;
-    this.drawRoundedRect(left, top, width, height, style.borderRadius ?? 0);
+    const size = w.globalSize(this.ctx);
+    console.log({ size });
+    const style = w.style;
+    // 1. background
+    this.ctx.fillStyle = style.backgroundColor;
+    this.drawRoundedRect(
+      size.x,
+      size.y,
+      size.width,
+      size.height,
+      style.borderRadius as number
+    );
     this.ctx.fill();
-    if (drawBorder) {
-      this.ctx.strokeStyle = style.borderColor;
-      this.ctx.lineWidth = style.borderWidth ?? 2;
-      this.ctx.stroke();
-    }
 
-    // render text
-    textSegments.forEach((text, i) => {
-      const fontSize = style.fontSize ?? C.System.fontSize;
-      const lineHeight = style.lineHeight ?? fontSize * 1.2;
-      const orgHeight = widget.height;
-      const heightInPx = orgHeight < lineHeight ? lineHeight : orgHeight;
-      widget.setHeight(toPx(heightInPx));
-      const font = style.font ?? C.System.font;
-      this.ctx.font = `${fontSize}px ${font}`;
-      this.ctx.fillStyle = style.color ?? "#000";
-
-      // const { left: pl, right: pr, top: pt, bottom: pb } = widget.padding();
-
-      const textAlign = style.textAlign ?? "left";
-      const textWidth = this.ctx.measureText(text).width;
-      const textX =
-        textAlign === "left"
-          ? pl
-          : textAlign === "right"
-          ? pr
-          : (pl + pr) * 0.5;
-      const textY = pt + (i + 1) * singleLineHeight;
-      const maxWidth = widget.width;
-      this.ctx.textAlign = textAlign;
-      this.ctx.fillText(text, textX, textY);
-    });
-
-    //restore
-    this.ctx.fillStyle = prev.fillStyle;
-    this.ctx.strokeStyle = prev.strokeStyle;
-    this.ctx.lineWidth = prev.lineWidth;
-
-    // 2. render children
-    // widget.children.forEach((child) => this._renderWidget(child));
+    this.ctx.restore();
   }
 
   render() {
-    // console.log("Rendered");
-    widgets().forEach((widget) => {
-      // this call will recursively render all children
-      this._renderWidget(widget);
-    });
+    this.vdom.prepareRender();
+    this.speakVDOM("render() : ");
+    Tree.iterate(
+      this.vdom._inflatedRoot,
+      (w) => {
+        console.log("inflatedRoot :", w.id);
+      },
+      "BFS"
+    );
+
+    Tree.iterate(this.vdom._inflatedRoot, this._renderWidget.bind(this), "BFS");
   }
 
   findUpdateArea() {
@@ -576,7 +413,7 @@ class MHPCanvas extends BasicCanvas {
       if (this.updateScreen()) {
         const { x, y, w, h } = this.findUpdateArea();
         // this.ctx.clearRect(x, y, w, h);
-        this.clearBase();
+        // this.clearBase();
         this.render();
       } else {
         this.showIdle();

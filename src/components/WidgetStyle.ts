@@ -6,7 +6,7 @@ export type Inherit = "inherit";
 
 export const DefaultStyle: WidgetStyle = {
   size: {
-    width: "100%",
+    width: 1,
   },
   verAlign: "inherit",
   horAlign: "inherit",
@@ -39,6 +39,45 @@ export const DefaultStyle: WidgetStyle = {
   overflowY: "grow",
 } as const;
 
+export const spreadStyle = (style: WidgetStyle) => {
+  const {
+    size,
+    verAlign,
+    horAlign,
+    backgroundColor,
+    borderWidth,
+    borderRadius,
+    borderColor,
+    visible,
+    zIndex,
+    grabbable,
+    position,
+    padding,
+    opacity,
+    cursor,
+    font,
+    lineHeight,
+    textAlign,
+    fontSize,
+    fontWeight,
+    fontStyle,
+    display,
+    flexDirection,
+
+    // on action
+    hover,
+    pointerDown,
+    pointerUp,
+
+    // TODOS
+    color,
+    margin,
+    showScrollBar,
+    overflowX,
+    overflowY,
+  } = style;
+};
+
 export default interface WidgetStyle {
   size?: AreaInputSize;
   verAlign?: "top" | "center" | "bottom" | Inherit;
@@ -52,6 +91,15 @@ export default interface WidgetStyle {
   grabbable?: boolean;
   position?: "relative" | "absolute" | "global";
   padding?: string;
+  paddingLeft?: number;
+  paddingRight?: number;
+  paddingTop?: number;
+  paddingBottom?: number;
+  margin?: string;
+  marginLeft?: number;
+  marginRight?: number;
+  marginTop?: number;
+  marginBottom?: number;
   opacity?: number | Inherit;
   cursor?:
     | "pointer"
@@ -72,6 +120,7 @@ export default interface WidgetStyle {
   fontStyle?: string | Inherit;
   display?: "block" | "flex";
   flexDirection?: "row" | "column" | Omittable;
+  flex?: number;
 
   // on action
   hover?: WidgetStyle | Omittable;
@@ -80,7 +129,6 @@ export default interface WidgetStyle {
 
   // TODOS
   color?: string | Inherit;
-  margin?: string;
   showScrollBar?: boolean;
   overflowX?: "grow" | "hidden" | "scroll";
   overflowY?: "grow" | "hidden" | "scroll";

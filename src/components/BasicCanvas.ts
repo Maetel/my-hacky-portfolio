@@ -1,3 +1,4 @@
+import CanvasObserver from "@/class/WindowObserver";
 import EventInput from "./EventInput";
 
 export default class BasicCanvas extends EventInput {

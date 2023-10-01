@@ -24,19 +24,23 @@ export const parsePx = (basePx: number, length: number | string) => {
   }
   throw new Error(`length is not valid. [length] = [${length}]`);
 };
-export const isPx = (string: string) =>
-  string.trim().endsWith("px") && !string.includes("%");
-export const isPercent = (string: string) =>
-  string.trim().endsWith("%") && !string.includes("px");
-export const parseIfPixel = (string: string) => {
+export const isPx = (string: number | string) =>
+  typeof string === "string" &&
+  string.trim().endsWith("px") &&
+  !string.includes("%");
+export const isPercent = (string: number | string) =>
+  typeof string === "string" &&
+  string.trim().endsWith("%") &&
+  !string.includes("px");
+export const parseIfPixel = (string: number | string) => {
   if (isPx(string)) {
-    return Number(string.replaceAll(" ", "").replace("px", ""));
+    return Number((string as string).replaceAll(" ", "").replace("px", ""));
   }
   return null;
 };
-export const parseIfPercent = (string: string) => {
+export const parseIfPercent = (string: number | string) => {
   if (isPercent(string)) {
-    return Number(string.replaceAll(" ", "").replace("%", ""));
+    return Number((string as string).replaceAll(" ", "").replace("%", ""));
   }
   return null;
 };

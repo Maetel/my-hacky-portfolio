@@ -9,6 +9,25 @@ import WidgetManager, {
 import WidgetStyle from "./components/WidgetStyle";
 
 export function initWidgets() {
+  console.log("initWidgets");
+  const w1 = new Widget({
+    id: "w1",
+    style: {
+      position: "global",
+      size: {
+        left: "100px",
+        top: "100px",
+        width: "100px",
+        height: "100px",
+      },
+      borderRadius: 20,
+      backgroundColor: "#ff0000",
+      zIndex: 1,
+    },
+  });
+  console.log({ w1 });
+}
+export function _initWidgets() {
   // console.log("called");
   // const background = new StatelessWidget("background", null, {
   //   size: {
