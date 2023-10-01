@@ -311,7 +311,7 @@ export class InflatedWidget {
 
     /////////////////////////////////////////////////////////////
     // necessaries
-    const { position, display } = s;
+    const { position, display, flexDirection } = s;
 
     const relativeChildren = this.children.filter(
       (iw) => iw.inflatedStyle.position === "relative"
@@ -341,7 +341,7 @@ export class InflatedWidget {
       return height;
     };
 
-    const isParentFlex =
+    const isParentHorFlex =
       this.parent.style.display === "flex" &&
       this.parent.style.flexDirection === "row";
     const myFlexRatio = s.flex;
@@ -372,9 +372,9 @@ export class InflatedWidget {
     let maxTextWidth = 0;
     // calc only if text exists and length > 0
     if (this._widget.text?.length > 0) {
-      if (fixedWidth || (isParentFlex && hasFlexRatio)) {
+      if (fixedWidth || (isParentHorFlex && hasFlexRatio)) {
         const width =
-          isParentFlex && hasFlexRatio ? getMyFlexWidth() : getFixedWidth();
+          isParentHorFlex && hasFlexRatio ? getMyFlexWidth() : getFixedWidth();
         texts = helpers.createTextSegments(
           ctx,
           this._widget.text,
@@ -400,21 +400,38 @@ export class InflatedWidget {
       }
     }
     const totalTextHeight = texts.length * (s.lineHeight as number);
+    const getRelChildrenWidthTotal = () => {
+      return relativeChildren.reduce((total, iw) => {
+        return total + iw.globalSize(ctx).widthTotal;
+      }, 0);
+    };
     const getRelChildrenHeightTotal = () => {
       return relativeChildren.reduce((total, iw) => {
         return total + iw.globalSize(ctx).heightTotal;
       }, 0);
     };
+    const getRelChildrenMaxHeight = () => {
+      return relativeChildren.reduce((maxHeight, iw) => {
+        return Math.max(maxHeight, iw.globalSize(ctx).heightTotal);
+      }, 0);
+    };
+    const isHorFlexContainer = display === "flex" && flexDirection === "row";
 
-    const width =
-      isParentFlex && hasFlexRatio
-        ? getMyFlexWidth()
-        : fixedWidth
-        ? getFixedWidth()
-        : maxTextWidth + paddingHor;
-    const height = fixedHeight
+    const width = isHorFlexContainer
+      ? getRelChildrenWidthTotal() + paddingHor + maxTextWidth
+      : isParentHorFlex && hasFlexRatio
+      ? getMyFlexWidth()
+      : fixedWidth
+      ? getFixedWidth()
+      : maxTextWidth + paddingHor;
+    if (["w1", "w2", "w3"].includes(this.id)) {
+    }
+    const height = isHorFlexContainer
+      ? Math.max(totalTextHeight, getRelChildrenMaxHeight()) + paddingVer
+      : fixedHeight && !(isParentHorFlex && hasFlexRatio)
       ? getFixedHeight()
       : totalTextHeight + getRelChildrenHeightTotal() + paddingVer;
+    console.log({ id: this.id, width, height });
 
     this._globalSize = {
       innerWidth: width - paddingHor,
@@ -463,7 +480,9 @@ export class InflatedWidget {
 
     // case 1. global
     const isBlock = display === "block";
-    const isFlex = display === "flex";
+    const isParentHorFlex =
+      this.parent.style.display === "flex" &&
+      this.parent.style.flexDirection === "row";
     const topSibilingsHeight = this.relativeSibilings.top.reduce((acc, w) => {
       return acc + w.globalSize(ctx).heightTotal;
     }, 0);
@@ -495,29 +514,40 @@ export class InflatedWidget {
       pc.y + ps.padding.top + ps.totalTextHeight + topSibilingsHeight;
     const parentRight = pc.right - ps.padding.right;
     const parentBottom = pc.bottom - ps.padding.bottom;
-    const x = inLeft
-      ? (isGlobal ? 0 : parentLeft) +
-        (isRelative ? 0 : parseHor(s.size?.left ?? 0)) +
-        margin.left
-      : inRight
-      ? (isGlobal ? canvasWidth : parentRight) -
-        parseHor(s.size.right) -
-        width -
-        margin.right
-      : undefined;
-    const y = inTop
-      ? (isGlobal ? 0 : parentTop) +
-        (isRelative ? 0 : parseVer(s.size?.top ?? 0)) +
-        margin.top
-      : inBottom
-      ? (isGlobal ? canvasHeight : parentBottom) -
-        parseVer(s.size.bottom) -
-        height -
-        margin.bottom
-      : undefined;
+
+    if (isParentHorFlex && isRelative) {
+      // const x =
+    } else {
+      const x = inLeft
+        ? (isGlobal ? 0 : parentLeft) +
+          (isRelative ? 0 : parseHor(s.size?.left ?? 0)) +
+          margin.left
+        : inRight
+        ? (isGlobal ? canvasWidth : parentRight) -
+          parseHor(s.size.right) -
+          width -
+          margin.right
+        : undefined;
+      const y = inTop
+        ? (isGlobal ? 0 : parentTop) +
+          (isRelative ? 0 : parseVer(s.size?.top ?? 0)) +
+          margin.top
+        : inBottom
+        ? (isGlobal ? canvasHeight : parentBottom) -
+          parseVer(s.size.bottom) -
+          height -
+          margin.bottom
+        : undefined;
+      this._globalCoord = {
+        x, // margin.left + left
+        y, // margin.top + top
+        right: x + width,
+        bottom: y + height,
+      };
+    }
 
     //verifies
-    const verifies = true;
+    const verifies = !true;
     if (verifies) {
       if (!inLeft && !inRight) {
         error("inLeft && inRight are both false", {
@@ -556,12 +586,6 @@ export class InflatedWidget {
     // const widthTotal = width + margin.left + margin.right;
     // const heightTotal = height + margin.top + margin.bottom;
 
-    this._globalCoord = {
-      x, // margin.left + left
-      y, // margin.top + top
-      right: x + width,
-      bottom: y + height,
-    };
     return this._globalCoord;
   }
   speakGlobalSize() {

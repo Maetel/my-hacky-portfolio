@@ -26,7 +26,7 @@ export function initWidgets() {
       // borderRadius: 20,
       backgroundColor: "red",
       display: "flex",
-      flexDirection: "row",
+      // flexDirection: "row",
     },
   });
   console.log({ w1 });
@@ -52,6 +52,63 @@ export function initWidgets() {
     parent: w1,
     text: "w3",
     id: "w3",
+    style: {
+      size: {
+        right: "20px",
+        bottom: "20px",
+        width: "100px",
+        height: "100px",
+      },
+      padding: "10px",
+      color: "black",
+      // position: "relative",
+      // borderRadius: 20,
+      backgroundColor: "green",
+    },
+  });
+
+  const w4 = new Widget({
+    text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
+    id: "w4",
+    style: {
+      position: "global",
+      size: {
+        left: "100px",
+        top: "700px",
+        // width: "300px",
+        // height: "300px",
+      },
+      // padding: "50px",
+      color: "white",
+      // borderRadius: 20,
+      backgroundColor: "red",
+      display: "flex",
+      flexDirection: "row",
+    },
+  });
+  console.log({ w1 });
+  new Widget({
+    parent: w4,
+    text: "w5",
+    id: "w5",
+    style: {
+      // size: {
+      //   left: "100px",
+      //   top: "100px",
+      //   width: "300px",
+      //   height: "300px",
+      // },
+      // margin: "10px 0px",
+      padding: "50px",
+      color: "black",
+      // borderRadius: 20,
+      backgroundColor: "blue",
+    },
+  });
+  new Widget({
+    parent: w4,
+    text: "w6",
+    id: "w6",
     style: {
       size: {
         right: "20px",

@@ -153,7 +153,9 @@ export default class Widget extends Area {
 
   addChild(child: Widget) {
     child.parent = this;
-    this.children.push(child);
+    if (!this.children.includes(child)) {
+      this.children.push(child);
+    }
     console.log("Added child : ", child.id);
     // Store.sortWidgets();
     return this;
