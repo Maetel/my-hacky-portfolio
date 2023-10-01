@@ -115,12 +115,7 @@ export class InflatedWidget {
     };
 
     this.id = widget.id;
-    if (this.id === "w1") {
-      console.log("w1 style : ", { ...widget.style });
-    }
     if (widget.id === "root") {
-      console.log("set root size");
-      // debugger;
       this._globalCoord = { ...VDOM.canvasCoord };
       this._globalSize = { ...VDOM.canvasSize };
     }
@@ -261,6 +256,8 @@ export class InflatedWidget {
 
     // necessaries
     const { position, display } = s;
+    const isFlex = display === "flex";
+    const growWidth = isFlex && s.flexDirection === "row";
     const sibilings = this.sibilings;
     const relativeChildren = this.children.filter(
       (iw) => iw.inflatedStyle.position === "relative"
@@ -271,9 +268,7 @@ export class InflatedWidget {
     const fixedWidth = notNullish(s.size?.width);
     const fixedHeight = notNullish(s.size?.height);
     const getRelChildrenWidthTotal = () => {
-      console.log({ relativeChildren });
       return relativeChildren.reduce((total, iw) => {
-        console.log({ iw });
         return total + iw.globalSize(ctx).widthTotal;
       }, 0);
     };
@@ -295,7 +290,6 @@ export class InflatedWidget {
         fontSize ??
         C.System.lineHeight) as number;
       const fontCombo = `${fontSize}px ${font}`;
-      console.log(this.id, "fontCombo : ", fontCombo);
       ctx.font = fontCombo;
 
       const totalText = text ?? "";
@@ -387,7 +381,9 @@ export class InflatedWidget {
     // TODO : flex
     const width = fixedWidth
       ? getFixedWidth()
-      : maxTextWidth + getRelChildrenWidthTotal() + paddingHor;
+      : maxTextWidth +
+        (growWidth ? getRelChildrenWidthTotal() : 0) +
+        paddingHor;
     // console.log({
     //   width,
     //   maxTextWidth,
@@ -395,7 +391,9 @@ export class InflatedWidget {
     // });
     const height = fixedHeight
       ? getFixedHeight()
-      : totalTextHeight + getRelChildrenHeightTotal() + paddingVer;
+      : totalTextHeight +
+        (!growWidth ? getRelChildrenHeightTotal() : 0) +
+        paddingVer;
 
     this._globalSize = {
       innerWidth: width - paddingHor,
@@ -433,9 +431,14 @@ export class InflatedWidget {
     } = size;
     const s = this.style;
     const { display, position } = s;
+    const { width: canvasWidth, height: canvasHeight } =
+      VDOM.canvasObserver.size;
 
     // const screenWidth = clientWidth();
     // const screenHeight = clientHeight();
+    const isRelative = position === "relative";
+    const isGlobal = position === "global";
+    const isAbsolute = position === "absolute";
 
     // case 1. global
     const isBlock = display === "block";
@@ -448,8 +451,8 @@ export class InflatedWidget {
       if (this.id === "w1") {
         // debugger;
       }
-      const inRight = notNullish(s.size?.right) && s.horAlign === "right";
-      const inBottom = notNullish(s.size?.bottom) && s.verAlign === "bottom";
+      const inRight = notNullish(s.size?.right) && (isGlobal || isAbsolute);
+      const inBottom = notNullish(s.size?.bottom) && (isGlobal || isAbsolute);
       // const inTop = notNullish(s.size?.top) && s.verAlign === "top";
       // const inLeft = notNullish(s.size?.left) && s.horAlign === "left";
       const inLeft = !inRight;
@@ -464,26 +467,30 @@ export class InflatedWidget {
         const { innerHeight } = ps;
         return parsePx(innerHeight, length);
       };
-
+      if (this.id === "w3") {
+        console.log({ inRight, canvasWidth });
+      }
+      const parentLeft = pc.x + ps.padding.left;
+      const parentTop =
+        pc.y + ps.padding.top + ps.totalTextHeight + topSibilingsHeight;
+      const parentRight = pc.right - ps.padding.right;
+      const parentBottom = pc.bottom - ps.padding.bottom;
       const x = inLeft
-        ? pc.x + ps.padding.left + parseHor(s.size?.left ?? 0) + margin.left
+        ? (isGlobal ? 0 : parentLeft) +
+          (isRelative ? 0 : parseHor(s.size?.left ?? 0)) +
+          margin.left
         : inRight
-        ? pc.right -
-          ps.padding.right -
+        ? (isGlobal ? canvasWidth : parentRight) -
           parseHor(s.size.right) -
           width -
           margin.right
         : undefined;
       const y = inTop
-        ? pc.y +
-          ps.padding.top +
-          ps.totalTextHeight +
-          topSibilingsHeight +
-          parseVer(s.size?.top ?? 0) +
+        ? (isGlobal ? 0 : parentTop) +
+          (isRelative ? 0 : parseVer(s.size?.top ?? 0)) +
           margin.top
         : inBottom
-        ? pc.bottom -
-          ps.padding.bottom -
+        ? (isGlobal ? canvasHeight : parentBottom) -
           parseVer(s.size.bottom) -
           height -
           margin.bottom
@@ -535,9 +542,6 @@ export class InflatedWidget {
         right: x + width,
         bottom: y + height,
       };
-      if (this.id === "w1") {
-        this.speakGlobalSize();
-      }
       return this._globalCoord;
     }
     if (isFlex) {

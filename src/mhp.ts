@@ -100,7 +100,7 @@ class MHPCanvas extends BasicCanvas {
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     super(canvas, width, height);
     this.vdom = new VDOM(this.canvas);
-    this.speakVDOM("Canvas create : ");
+    // this.speakVDOM("Canvas create : ");
 
     if (isMobile) {
     }
@@ -324,9 +324,7 @@ class MHPCanvas extends BasicCanvas {
     const textX = size.x + size.padding.left;
     const textYStart = size.y + size.padding.top + (style.lineHeight as number);
     size.texts.forEach((t) => {
-      console.log({ fillStyle: this.ctx.fillStyle, font: this.ctx.font });
       const { text, width, yOffset } = t;
-      console.log("Render text : ", { textX, textYStart, ...t });
       this.ctx.fillText(text, textX, textYStart + yOffset);
     });
 
@@ -339,14 +337,14 @@ class MHPCanvas extends BasicCanvas {
 
   render() {
     this.vdom.prepareRender();
-    this.speakVDOM("render() : ");
-    Tree.iterate(
-      this.vdom._inflatedRoot,
-      (w) => {
-        console.log("inflatedRoot :", w.id);
-      },
-      "BFS"
-    );
+    // this.speakVDOM("render() : ");
+    // Tree.iterate(
+    //   this.vdom._inflatedRoot,
+    //   (w) => {
+    //     console.log("inflatedRoot :", w.id);
+    //   },
+    //   "BFS"
+    // );
 
     Tree.iterate(this.vdom._inflatedRoot, this._renderWidget.bind(this), "BFS");
   }
