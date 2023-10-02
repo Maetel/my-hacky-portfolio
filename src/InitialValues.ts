@@ -68,7 +68,7 @@ export function initWidgets() {
   });
 
   const w4 = new Widget({
-    text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
+    // text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w4",
     style: {
       position: "global",
@@ -84,7 +84,7 @@ export function initWidgets() {
       backgroundColor: "red",
       display: "flex",
       flexDirection: "row",
-      overflowX: "hidden",
+      // overflowX: "hidden",
     },
   });
   console.log({ w1 });
@@ -93,17 +93,18 @@ export function initWidgets() {
     text: "w5",
     id: "w5",
     style: {
-      // size: {
-      //   left: "100px",
-      //   top: "100px",
-      //   width: "300px",
-      //   height: "300px",
-      // },
+      size: {
+        //   left: "100px",
+        //   top: "100px",
+        width: "50px",
+        //   height: "300px",
+      },
       // margin: "10px 0px",
-      padding: "50px",
+      // padding: "50px",
       color: "black",
       // borderRadius: 20,
       backgroundColor: "blue",
+      // flex: 1,
     },
   });
   new Widget({
@@ -122,6 +123,7 @@ export function initWidgets() {
       // position: "relative",
       // borderRadius: 20,
       backgroundColor: "green",
+      // flex: 1,
     },
   });
 }

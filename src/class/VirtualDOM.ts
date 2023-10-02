@@ -153,6 +153,15 @@ export class InflatedWidget {
   isInflated: boolean = false;
   _globalCoord: RenderableCoord = null;
   _globalSize: RenderableSize = null;
+  resetCoord() {
+    this._globalCoord = null;
+  }
+  resetSize(resetCoord = true) {
+    if (resetCoord) {
+      this._globalCoord = null;
+    }
+    this._globalSize = null;
+  }
   /**
    *
    */
@@ -348,6 +357,8 @@ export class InflatedWidget {
     const hasFlexRatio = notNullish(myFlexRatio);
     const getMyFlexWidth = () => {
       //assume isParentFlex && hasFlexRatio
+      const { innerWidth: parentWidth, childrenFlexTotal: sibilingsFlexTotal } =
+        getParentSize();
       const fixedWidthSibilings = this.parent.children.filter(
         (w) =>
           w.style.position === "relative" && w.style.size?.width !== undefined
@@ -356,8 +367,7 @@ export class InflatedWidget {
         (acc, w) => acc + parsePx(parentWidth, w.style.size.width),
         0
       );
-      const { innerWidth: parentWidth, childrenFlexTotal: sibilingsFlexTotal } =
-        getParentSize();
+
       const widthLeftForFlex = parentWidth - sumOfFixedWidthSibilings;
 
       // console.log({ id: this.id, widthLeftForFlex });
@@ -633,6 +643,20 @@ export default class VDOM {
     VDOM._canvasBuffer = canvas;
     this._inflatedRoot = new InflatedWidget(this._root);
   }
+
+  update(id: string) {
+    const found = Tree.find(this._inflatedRoot, (w) => w.id === id);
+    if (found) {
+      Tree.iterate(found, (w) => w.resetSize(), "DFS_ChildrenFirst");
+    }
+  }
+  updateCoord(id: string) {
+    const found = Tree.find(this._inflatedRoot, (w) => w.id === id);
+    if (found) {
+      Tree.iterate(found, (w) => w.resetCoord(), "DFS_ChildrenFirst");
+    }
+  }
+
   inflate() {
     Tree.iterate(this._inflatedRoot, (w) => w.inflate(), "DFS_ParentFirst");
     // this.inputStyle.this.isInflated = true;
@@ -650,5 +674,12 @@ export default class VDOM {
 
   resize() {
     VDOM.canvasObserver.resize(VDOM.canvas);
+  }
+
+  find(id: string) {
+    return Tree.find(this._inflatedRoot, (w) => w.id === id);
+  }
+  findAll(predicate: (w: InflatedWidget) => boolean) {
+    return Tree.findAll(this._inflatedRoot, predicate);
   }
 }

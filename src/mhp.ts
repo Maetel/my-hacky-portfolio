@@ -112,6 +112,7 @@ class MHPCanvas extends BasicCanvas {
     this.setHeight(this.height);
     this.setWidth(this.width);
     WidgetManager.resetWindowSize();
+    this.vdom.resize();
     this.redraw();
     // this.run();
   }
@@ -123,6 +124,11 @@ class MHPCanvas extends BasicCanvas {
   // @override
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
+
+    this.vdom.find("w1").style.size.left = this.mouseMoveX + "px";
+    this.vdom.find("w1").style.size.top = this.mouseMoveY + "px";
+    // this.vdom.update("w1");
+    this.redraw();
 
     // const prev = this.pointerMoveOn;
     // this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
@@ -151,8 +157,9 @@ class MHPCanvas extends BasicCanvas {
   onPointerDown(e: MouseEvent) {
     // console.log({ widgets });
     super.onPointerDown(e);
-    this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
+    // this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
     // console.log({ down: this.pointerDownOn?.style?.cursor });
+
     this.canvas.style.cursor =
       this.pointerDownOn?.style?.pointerDown?.cursor ?? "default";
     this.handlePointerDown();
@@ -161,11 +168,11 @@ class MHPCanvas extends BasicCanvas {
   // @override
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
-    const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
-    this.handlePointerUp(pointerUpOn);
+    // const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
+    // this.handlePointerUp(pointerUpOn);
     this.pointerDownOn = null;
     this.pointerMoveOn = null; // mobile
-    this.redraw();
+    // this.redraw();
   }
 
   // @override
@@ -448,7 +455,7 @@ class MHPCanvas extends BasicCanvas {
 
     if (true) {
       this.renderFPS();
-      this.showWidgets();
+      // this.showWidgets();
     }
 
     //!content
