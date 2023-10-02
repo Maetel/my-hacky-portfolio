@@ -417,12 +417,14 @@ export class InflatedWidget {
     };
     const isHorFlexContainer = display === "flex" && flexDirection === "row";
 
-    const width = isHorFlexContainer
+    /////////////////////////////////////////////////////////////
+    // calc width & height
+    const width = fixedWidth
+      ? getFixedWidth()
+      : isHorFlexContainer
       ? getRelChildrenWidthTotal() + paddingHor + maxTextWidth
       : isParentHorFlex && hasFlexRatio
       ? getMyFlexWidth()
-      : fixedWidth
-      ? getFixedWidth()
       : maxTextWidth + paddingHor;
     if (["w1", "w2", "w3"].includes(this.id)) {
     }
@@ -510,13 +512,26 @@ export class InflatedWidget {
       console.log({ inRight, canvasWidth });
     }
     const parentLeft = pc.x + ps.padding.left;
-    const parentTop =
-      pc.y + ps.padding.top + ps.totalTextHeight + topSibilingsHeight;
+    const parentTop = pc.y + ps.padding.top + topSibilingsHeight;
     const parentRight = pc.right - ps.padding.right;
     const parentBottom = pc.bottom - ps.padding.bottom;
 
     if (isParentHorFlex && isRelative) {
-      // const x =
+      const x =
+        parentLeft +
+        margin.left +
+        this.parent.globalSize(ctx).maxTextWidth +
+        this.relativeSibilings.left.reduce(
+          (acc, w) => w.globalSize(ctx).widthTotal,
+          0
+        );
+      const y = parentTop + margin.top;
+      this._globalCoord = {
+        x, // margin.left + left
+        y, // margin.top + top
+        right: x + width,
+        bottom: y + height,
+      };
     } else {
       const x = inLeft
         ? (isGlobal ? 0 : parentLeft) +
@@ -529,7 +544,7 @@ export class InflatedWidget {
           margin.right
         : undefined;
       const y = inTop
-        ? (isGlobal ? 0 : parentTop) +
+        ? (isGlobal ? 0 : parentTop + ps.totalTextHeight) +
           (isRelative ? 0 : parseVer(s.size?.top ?? 0)) +
           margin.top
         : inBottom
@@ -565,7 +580,7 @@ export class InflatedWidget {
           s,
         });
       }
-      if (isNullish(x)) {
+      if (isNullish(this._globalCoord.x)) {
         error("x is undefined", {
           id: this.id,
           inLeft,
@@ -573,7 +588,7 @@ export class InflatedWidget {
           s,
         });
       }
-      if (isNullish(y)) {
+      if (isNullish(this._globalCoord.y)) {
         error("y is undefined", {
           id: this.id,
           inTop,
@@ -628,7 +643,7 @@ export default class VDOM {
     this.inflate();
     Tree.iterate(
       this._inflatedRoot,
-      (w) => w.globalSize(VDOM.ctx),
+      (w) => w.globalCoord(VDOM.ctx),
       "DFS_ParentFirst"
     );
   }

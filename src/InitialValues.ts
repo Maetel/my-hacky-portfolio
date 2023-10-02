@@ -74,8 +74,8 @@ export function initWidgets() {
       position: "global",
       size: {
         left: "100px",
-        top: "700px",
-        // width: "300px",
+        top: "400px",
+        width: "200px",
         // height: "300px",
       },
       // padding: "50px",
@@ -84,6 +84,7 @@ export function initWidgets() {
       backgroundColor: "red",
       display: "flex",
       flexDirection: "row",
+      overflowX: "hidden",
     },
   });
   console.log({ w1 });

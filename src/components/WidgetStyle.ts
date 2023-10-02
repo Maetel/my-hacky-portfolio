@@ -35,8 +35,8 @@ export const DefaultStyle: WidgetStyle = {
   color: "inherit",
   margin: "0px",
   showScrollBar: false,
-  overflowX: "grow",
-  overflowY: "grow",
+  overflowX: "show",
+  overflowY: "show",
 } as const;
 
 export const spreadStyle = (style: WidgetStyle) => {
@@ -130,8 +130,8 @@ export default interface WidgetStyle {
   // TODOS
   color?: string | Inherit;
   showScrollBar?: boolean;
-  overflowX?: "grow" | "hidden" | "scroll";
-  overflowY?: "grow" | "hidden" | "scroll";
+  overflowX?: "show" | "hidden" | "scroll"; // only applies to relative children
+  overflowY?: "show" | "hidden" | "scroll"; // only applies to relative children
 }
 
 export const background = (

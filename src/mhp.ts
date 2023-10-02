@@ -42,8 +42,7 @@ const mobileSlicer = (array: any[]) => {
   }
   return array;
 };
-const widgets = () => WidgetManager.widgets;
-const wmgr = WidgetManager;
+
 const initMHP = () => {
   const theCanvasElement = document.getElementById(
     "theCanvas"
@@ -308,6 +307,9 @@ class MHPCanvas extends BasicCanvas {
 
     // 1. background
     this.ctx.fillStyle = style.backgroundColor;
+    if (["w4", "w5", "w6"].includes(w.id)) {
+      console.log({ size });
+    }
     this.drawRoundedRect(
       size.x,
       size.y,
