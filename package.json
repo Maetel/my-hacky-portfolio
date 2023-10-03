@@ -4,9 +4,9 @@
   "description": "My Hacky Portfolio",
   "main": "build/mhp.latest.min.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:dev\" \"npm run --silent dev:serve\"",
+    "dev": "concurrently \"npm run dev:dev\" \"bun server.ts --watch\"",
     "build": "npm run build:get-version && npm run build:build && npm run build:copy && npm run build:clean",
-    "dev:serve": "serve -l 8040 public",
+    "dev:serve": "bun server.ts --watch",
     "build:get-version": "node -e 'const MHP_VERSION = require(\"./src/VERSION.js\"); process.stdout.write(MHP_VERSION)' > .version",
     "dev:dev": "esbuild src/mhp.ts --bundle --sourcemap --target=es6 --outfile=public/mhp.js --watch",
     "build:build": "esbuild src/mhp.ts --bundle --minify --target=es6 --outfile=build/mhp.$(cat .version).js",
@@ -14,9 +14,9 @@
     "build:clean": "rm .version"
   },
   "devDependencies": {
+    "bun-types": "^1.0.4-canary.20231003T140149",
     "concurrently": "^8.2.1",
     "esbuild": "^0.19.3",
-    "serve": "^14.2.1",
     "typescript": "^5.2.2"
   }
 }

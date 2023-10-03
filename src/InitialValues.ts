@@ -63,7 +63,7 @@ export function initWidgets() {
       color: "black",
       // position: "relative",
       // borderRadius: 20,
-      backgroundColor: "green",
+      backgroundColor: "white",
     },
   });
 
