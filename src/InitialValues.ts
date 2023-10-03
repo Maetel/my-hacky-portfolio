@@ -1,6 +1,6 @@
 import Store from "./class/Store";
 import StatefulWidget from "./components/StatefulWidget";
-import Widget from "./components/Widget";
+import VirtualWidget from "./components/Widget";
 import WidgetManager, {
   widgetIds,
   widgets,
@@ -10,7 +10,7 @@ import WidgetStyle from "./components/WidgetStyle";
 
 export function initWidgets() {
   console.log("initWidgets");
-  const w1 = new Widget({
+  const w1 = new VirtualWidget({
     text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w1",
     style: {
@@ -21,16 +21,28 @@ export function initWidgets() {
         // width: "300px",
         // height: "300px",
       },
+      hover: {
+        backgroundColor: "#0000ff55",
+        cursor: "pointer",
+        borderRadius: 30,
+        borderColor: "#0000ff",
+        borderWidth: 20,
+      },
+      pointerDown: {
+        backgroundColor: "#0000ffaa",
+        cursor: "grabbing",
+      },
       // padding: "50px",
       color: "white",
       // borderRadius: 20,
       backgroundColor: "red",
       display: "flex",
       // flexDirection: "row",
+      grabbable: true,
     },
   });
   console.log({ w1 });
-  const w2 = new Widget({
+  const w2 = new VirtualWidget({
     parent: w1,
     text: "w2",
     id: "w2",
@@ -48,7 +60,7 @@ export function initWidgets() {
       backgroundColor: "blue",
     },
   });
-  const w3 = new Widget({
+  const w3 = new VirtualWidget({
     parent: w1,
     text: "w3",
     id: "w3",
@@ -67,7 +79,7 @@ export function initWidgets() {
     },
   });
 
-  const w4 = new Widget({
+  const w4 = new VirtualWidget({
     // text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w4",
     style: {
@@ -88,7 +100,7 @@ export function initWidgets() {
     },
   });
   console.log({ w1 });
-  new Widget({
+  new VirtualWidget({
     parent: w4,
     text: "w5",
     id: "w5",
@@ -107,7 +119,7 @@ export function initWidgets() {
       // flex: 1,
     },
   });
-  new Widget({
+  new VirtualWidget({
     parent: w4,
     text: "w6",
     id: "w6",
@@ -118,6 +130,7 @@ export function initWidgets() {
         width: "100px",
         height: "100px",
       },
+      grabbable: true,
       padding: "10px",
       color: "black",
       // position: "relative",
@@ -202,7 +215,7 @@ export function _initWidgets() {
     opacity: 0.5,
     // position: "relative",
   };
-  const first = new Widget({
+  const first = new VirtualWidget({
     style: firstStyle,
   });
   first.addChild(
@@ -227,7 +240,7 @@ export function _initWidgets() {
     })
   );
   first.addChild(
-    new Widget({
+    new VirtualWidget({
       text: "This is my text",
       style: thirdStyle,
     })

@@ -7,15 +7,18 @@ import Store from "@/class/Store";
 import { parsePx } from "@/utils";
 import * as C from "@/constants";
 
-export type WidgetCallback = (stls: Widget) => any;
+export type WidgetCallback = (stls: VirtualWidget) => any;
 export type OnDestoryWithoutCleanup = WidgetCallback;
-export type OnDestoryWithCleanup = (stls: Widget, cleanUp: () => any) => any;
+export type OnDestoryWithCleanup = (
+  stls: VirtualWidget,
+  cleanUp: () => any
+) => any;
 export type OnCreate = WidgetCallback;
 export interface WidgetOption {
-  parent?: Widget;
+  parent?: VirtualWidget;
   style?: WidgetStyle;
   id?: string;
-  copiedFrom?: Widget;
+  copiedFrom?: VirtualWidget;
   callbacks?: WidgetCallbacks;
   text?: string;
 }
@@ -28,13 +31,13 @@ export type WidgetCallbacks = {
   onDestroyWithCleanup?: OnDestoryWithCleanup;
 };
 
-export default class Widget extends Area {
+export default class VirtualWidget extends Area {
   addOrder: number;
   _speak: string[] = [];
-  copiedFrom?: Widget;
+  copiedFrom?: VirtualWidget;
   id: string;
-  parent: Widget | null = null;
-  children: Widget[] = [];
+  parent: VirtualWidget | null = null;
+  children: VirtualWidget[] = [];
   _style: WidgetStyle;
   timerJob?: TimerJob;
   inputOption?: WidgetOption;
@@ -104,7 +107,11 @@ export default class Widget extends Area {
       children: [...this.children],
     };
   }
-  animate(ms: number, start: (w: Widget) => any, cleanup?: (w: Widget) => any) {
+  animate(
+    ms: number,
+    start: (w: VirtualWidget) => any,
+    cleanup?: (w: VirtualWidget) => any
+  ) {
     if (cleanup) {
       this.timerJob = new TimerJob();
       this.timerJob.timeout(ms, () => {
@@ -142,8 +149,8 @@ export default class Widget extends Area {
   }
 
   //@override
-  copied(id?: string): Widget {
-    const retval = new Widget({
+  copied(id?: string): VirtualWidget {
+    const retval = new VirtualWidget({
       ...this.buildOption(),
       id: id ?? `${this.id}-copy`,
       copiedFrom: this,
@@ -151,7 +158,7 @@ export default class Widget extends Area {
     return retval;
   }
 
-  addChild(child: Widget) {
+  addChild(child: VirtualWidget) {
     child.parent = this;
     if (!this.children.includes(child)) {
       this.children.push(child);
@@ -161,12 +168,12 @@ export default class Widget extends Area {
     return this;
   }
 
-  addChildren(...children: Widget[]) {
+  addChildren(...children: VirtualWidget[]) {
     children.forEach(this.addChild.bind(this));
     return this;
   }
 
-  async deleteChild(child: Widget) {
+  async deleteChild(child: VirtualWidget) {
     if (!this.children.some((c) => c.id === child.id)) {
       error("Cannot find child : ", { child });
     }
@@ -255,12 +262,12 @@ export default class Widget extends Area {
     return this._callbacks.onDestroyWithCleanup;
   }
 
-  as<T extends Widget>() {
+  as<T extends VirtualWidget>() {
     return this as unknown as T;
   }
 
   // returns parent if found
-  get parents(): Widget[] | null {
+  get parents(): VirtualWidget[] | null {
     let retval = [];
     let parent = this.parent;
     while (parent) {
@@ -269,13 +276,13 @@ export default class Widget extends Area {
     }
     return retval.length > 0 ? retval : null;
   }
-  childOf(id: string): Widget | null {
+  childOf(id: string): VirtualWidget | null {
     return this.parents?.find((p) => p.id === id);
   }
 }
 
 class RootWidget {
-  static theRoot = new Widget({
+  static theRoot = new VirtualWidget({
     style: {
       ...DefaultStyle,
       size: {

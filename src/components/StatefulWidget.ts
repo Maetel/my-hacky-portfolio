@@ -1,9 +1,9 @@
 import WidgetState, { DefaultWidgetState } from "@/class/WidgetState";
-import Widget, { WidgetOption } from "./Widget";
+import VirtualWidget, { WidgetOption } from "./Widget";
 import WidgetStyle from "./WidgetStyle";
 import error from "@/class/IError";
 
-export default class StatefulWidget extends Widget {
+export default class StatefulWidget extends VirtualWidget {
   _state: WidgetState;
   constructor(
     options?: WidgetOption & {
@@ -41,14 +41,14 @@ export default class StatefulWidget extends Widget {
   }
 }
 
-export const asStateful = (widget: Widget) => {
+export const asStateful = (widget: VirtualWidget) => {
   if (widget.state) {
     return widget as StatefulWidget;
   }
   error("Widget is not stateful : ", { id: widget.id });
 };
 
-export const setState = (widget: Widget, state: WidgetState) => {
+export const setState = (widget: VirtualWidget, state: WidgetState) => {
   const w = asStateful(widget);
   w.state = { ...w.state, ...state };
 };

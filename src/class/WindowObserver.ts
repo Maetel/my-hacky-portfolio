@@ -1,52 +1,55 @@
-import { clientHeight, clientWidth } from "@/utils";
 import {
   EmptyFourWayPixels,
   RenderableSize,
   RenderableCoord,
 } from "./Renderable";
 
+/**
+ * Init when VDOM is imported
+ */
 export default class CanvasObserver {
-  private theCanvas: HTMLCanvasElement = null;
-  cachedSize: RenderableSize = null;
-  cachedCoord: RenderableCoord = null;
+  private static theCanvas: HTMLCanvasElement = null;
+  static cachedSize: RenderableSize = null;
+  static cachedCoord: RenderableCoord = null;
 
-  constructor(canvas: HTMLCanvasElement) {
-    this.theCanvas = canvas;
+  constructor() {}
+
+  static init(canvas: HTMLCanvasElement) {
+    CanvasObserver.theCanvas = canvas;
   }
 
-  resize(canvas: HTMLCanvasElement) {
-    this.theCanvas = canvas;
-    this.cachedSize = null;
-    this.cachedCoord = null;
+  static resize() {
+    CanvasObserver.cachedSize = null;
+    CanvasObserver.cachedCoord = null;
   }
 
-  get coord(): RenderableCoord {
-    if (this.cachedCoord) {
-      return this.cachedCoord;
+  static get coord(): RenderableCoord {
+    if (CanvasObserver.cachedCoord) {
+      return CanvasObserver.cachedCoord;
     }
 
     const x = 0;
     const y = 0;
-    const w = this.theCanvas.width;
-    const h = this.theCanvas.height;
-    this.cachedCoord = {
+    const w = CanvasObserver.theCanvas.width;
+    const h = CanvasObserver.theCanvas.height;
+    CanvasObserver.cachedCoord = {
       x,
       y,
       right: w,
       bottom: h,
     };
 
-    return this.cachedCoord;
+    return CanvasObserver.cachedCoord;
   }
 
-  get size(): RenderableSize {
-    if (this.cachedSize) {
-      return this.cachedSize;
+  static get size(): RenderableSize {
+    if (CanvasObserver.cachedSize) {
+      return CanvasObserver.cachedSize;
     }
 
-    const w = this.theCanvas.width;
-    const h = this.theCanvas.height;
-    this.cachedSize = {
+    const w = CanvasObserver.theCanvas.width;
+    const h = CanvasObserver.theCanvas.height;
+    CanvasObserver.cachedSize = {
       innerWidth: w,
       width: w,
       widthTotal: w,
@@ -61,6 +64,6 @@ export default class CanvasObserver {
       totalTextHeight: 0,
     };
 
-    return this.cachedSize;
+    return CanvasObserver.cachedSize;
   }
 }

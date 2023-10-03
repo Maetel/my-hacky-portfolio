@@ -29,8 +29,9 @@ import StatefulWidget, {
 import error from "./class/IError";
 import Store, { STORE_RERENDER } from "./class/Store";
 import TreeTest, { createRoot } from "@/class/TreeTest";
-import VDOM, { InflatedWidget } from "./class/VirtualDOM";
+import VDOM from "./class/VirtualDOM";
 import Tree, { TreeSearchType } from "./class/Tree";
+import { RenderableWidget } from "./class/RenderableWidget";
 
 let theCanvas: MHPCanvas;
 
@@ -48,6 +49,7 @@ const initMHP = () => {
     "theCanvas"
   ) as HTMLCanvasElement;
   const { clientHeight, clientWidth } = document.documentElement;
+  initWidgets();
   theCanvas = new MHPCanvas(theCanvasElement, clientWidth, clientHeight);
   Store.set(STORE_RERENDER, () => theCanvas.redraw());
 
@@ -58,7 +60,6 @@ const initMHP = () => {
   window.onkeydown = (event) => theCanvas.onKeyDown(event);
   window.onkeyup = (event) => theCanvas.onKeyUp(event);
 
-  initWidgets();
   theCanvas.run();
 };
 
@@ -117,8 +118,8 @@ class MHPCanvas extends BasicCanvas {
     // this.run();
   }
 
-  pointerMoveOn: Widget | null = null;
-  pointerDownOn: Widget | null = null;
+  pointerMoveOn: RenderableWidget | null = null;
+  pointerDownOn: RenderableWidget | null = null;
   // pointerUpOn: StatelessWidget | null = null;
 
   // @override
@@ -128,12 +129,15 @@ class MHPCanvas extends BasicCanvas {
     // this.vdom.update("w1");
     // this.redraw();
 
-    // const prev = this.pointerMoveOn;
-    // this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
-    // const next = this.pointerMoveOn;
-    // if (prev !== next) {
-    //   this.handleStateChange("onPointerMove", prev, next);
-    // }
+    const prev = this.pointerMoveOn;
+    this.pointerMoveOn =
+      this.vdom.mouseOn(this.mouseMoveX, this.mouseMoveY) ?? null;
+    const next = this.pointerMoveOn;
+    if (prev?.id !== next?.id) {
+      console.log("Handle state change");
+      this.handleStateChange("onPointerMove", prev, next);
+      // console.log({ prev: prev?.id, next: next?.id });
+    }
 
     // //find in reverse order
     if (this.isDragging) {
@@ -155,7 +159,8 @@ class MHPCanvas extends BasicCanvas {
   onPointerDown(e: MouseEvent) {
     // console.log({ widgets });
     super.onPointerDown(e);
-    // this.pointerDownOn = wmgr.of(this.mouseDownX, this.mouseDownY) ?? null;
+    this.pointerDownOn =
+      this.vdom.mouseOn(this.mouseDownX, this.mouseDownY) ?? null;
     // console.log({ down: this.pointerDownOn?.style?.cursor });
 
     this.canvas.style.cursor =
@@ -192,7 +197,7 @@ class MHPCanvas extends BasicCanvas {
   // handle events
 
   handleClick(widget: Widget) {
-    this.pointerDownOn?.onClick?.(widget);
+    this.pointerDownOn?._widget.onClick?.(widget);
   }
 
   direction = 1;
@@ -202,6 +207,7 @@ class MHPCanvas extends BasicCanvas {
       return;
     }
     const clicked = this.pointerDownOn;
+    console.log({ id: clicked.id });
   }
 
   animations: Animation[] = [];
@@ -270,12 +276,14 @@ class MHPCanvas extends BasicCanvas {
       dy,
     } = this;
 
-    this.vdom.find("w1").style.size.left = mouseMoveX + "px";
-    this.vdom.find("w1").style.size.top = mouseMoveY + "px";
+    // this.vdom.find("w1").style.size.left = mouseMoveX + "px";
+    // this.vdom.find("w1").style.size.top = mouseMoveY + "px";
 
-    // if (this.pointerDownOn.style?.grabbable) {
-    //   this.pointerDownOn.move(dx, dy);
-    // }
+    if (this.pointerDownOn.style?.grabbable) {
+      // console.log({ id: this.pointerDownOn.id, dx, dy });
+      this.pointerDownOn.move(dx, dy);
+      this.vdom.updateCoord(this.pointerDownOn);
+    }
     this.redraw();
   }
 
@@ -301,31 +309,39 @@ class MHPCanvas extends BasicCanvas {
     return false;
   }
 
-  _renderWidget(w: InflatedWidget) {
+  _renderWidget(w: RenderableWidget) {
     // console.log("Rendering:", w.id);
     this.ctx.save();
 
-    const size = w.renderData(this.ctx);
-    const style = w.style;
+    const size = w.renderData();
+    let style = w.style;
 
-    // 0. clip first
-    // this.ctx.beginPath();
-    // this.ctx.rect(size.x, size.y, size.width, size.height);
-    // this.ctx.clip();
+    if (w.is(this.pointerMoveOn)) {
+      // console.log({ HoveredId: w.id });
+      style = { ...style, ...style.hover };
+    }
+    if (w.is(this.pointerDownOn)) {
+      style = { ...style, ...style.pointerDown };
+    }
 
     // 1. background
     this.ctx.fillStyle = style.backgroundColor;
     // if (["w4", "w5", "w6"].includes(w.id)) {
     //   console.log({ size });
     // }
+    const clipRoundedRect = true;
     this.drawRoundedRect(
       size.x,
       size.y,
       size.width,
       size.height,
-      style.borderRadius as number
+      style.borderRadius as number,
+      clipRoundedRect
     );
     this.ctx.fill();
+    this.ctx.strokeStyle = style.borderColor;
+    this.ctx.lineWidth = style.borderWidth as number;
+    this.ctx.stroke();
 
     // 2. texts
     this.ctx.fillStyle = style.color;
@@ -340,23 +356,19 @@ class MHPCanvas extends BasicCanvas {
 
     this.ctx.restore();
 
-    if (w.id === "root") {
+    if (this.ruler && w.id === "root") {
       this.drawRuler();
     }
   }
 
+  ruler = true;
+
+  toggleRuler() {
+    this.ruler = !this.ruler;
+  }
+
   render() {
     this.vdom.prepareRender();
-    // this.speakVDOM("render() : ");
-    // Tree.iterate(
-    //   this.vdom._inflatedRoot,
-    //   (w) => {
-    //     console.log("inflatedRoot :", w.id);
-    //   },
-    //   "BFS"
-    // );
-
-    // Tree.iterate(this.vdom._inflatedRoot, this._renderWidget.bind(this), "BFS");
     this.vdom.widgets.forEach(this._renderWidget.bind(this));
   }
 

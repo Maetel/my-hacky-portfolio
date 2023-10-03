@@ -39,7 +39,8 @@ export default class BasicCanvas extends EventInput {
     y: number,
     width: number,
     height: number,
-    borderRadius: number
+    borderRadius: number,
+    clip: boolean = true
   ) {
     this.ctx.beginPath();
     this.ctx.moveTo(x + borderRadius, y);
@@ -57,7 +58,7 @@ export default class BasicCanvas extends EventInput {
     this.ctx.lineTo(x, y + borderRadius);
     this.ctx.quadraticCurveTo(x, y, x + borderRadius, y);
     this.ctx.closePath();
-    this.ctx.clip();
+    clip && this.ctx.clip();
   }
 
   run(timestamp?: number) {
