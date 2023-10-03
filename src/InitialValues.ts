@@ -81,7 +81,7 @@ export function initWidgets() {
       // padding: "50px",
       color: "white",
       // borderRadius: 20,
-      backgroundColor: "red",
+      backgroundColor: "pink",
       display: "flex",
       flexDirection: "row",
       // overflowX: "hidden",
@@ -103,7 +103,7 @@ export function initWidgets() {
       // padding: "50px",
       color: "black",
       // borderRadius: 20,
-      backgroundColor: "blue",
+      backgroundColor: "cyan",
       // flex: 1,
     },
   });

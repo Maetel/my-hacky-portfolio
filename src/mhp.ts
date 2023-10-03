@@ -302,7 +302,7 @@ class MHPCanvas extends BasicCanvas {
   }
 
   _renderWidget(w: InflatedWidget) {
-    console.log("Rendering:", w.id);
+    // console.log("Rendering:", w.id);
     this.ctx.save();
 
     const size = w.renderData(this.ctx);
@@ -315,9 +315,9 @@ class MHPCanvas extends BasicCanvas {
 
     // 1. background
     this.ctx.fillStyle = style.backgroundColor;
-    if (["w4", "w5", "w6"].includes(w.id)) {
-      console.log({ size });
-    }
+    // if (["w4", "w5", "w6"].includes(w.id)) {
+    //   console.log({ size });
+    // }
     this.drawRoundedRect(
       size.x,
       size.y,
@@ -356,7 +356,8 @@ class MHPCanvas extends BasicCanvas {
     //   "BFS"
     // );
 
-    Tree.iterate(this.vdom._inflatedRoot, this._renderWidget.bind(this), "BFS");
+    // Tree.iterate(this.vdom._inflatedRoot, this._renderWidget.bind(this), "BFS");
+    this.vdom.widgets.forEach(this._renderWidget.bind(this));
   }
 
   findUpdateArea() {
@@ -456,7 +457,7 @@ class MHPCanvas extends BasicCanvas {
 
     if (true) {
       this.renderFPS();
-      // this.showWidgets();
+      this.showWidgets();
     }
 
     //!content
@@ -528,11 +529,7 @@ class MHPCanvas extends BasicCanvas {
 
   showWidgets() {
     // on the right corner, show isRendering
-    const text =
-      "Widgets:" +
-      widgets()
-        .map((w) => w.id)
-        .join(",");
+    const text = this.vdom.widgetTree;
     const font = "20px sans-serif";
     this.ctx.font = font;
     const textWidth = this.ctx.measureText(text).width;

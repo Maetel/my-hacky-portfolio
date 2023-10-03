@@ -372,7 +372,7 @@ export class InflatedWidget {
 
       // console.log({ id: this.id, widthLeftForFlex });
       const retval = (widthLeftForFlex * myFlexRatio) / sibilingsFlexTotal;
-      console.log("myFlexWidth of ", this.id, { retval });
+      // console.log("myFlexWidth of ", this.id, { retval });
       return retval;
     };
 
@@ -443,7 +443,7 @@ export class InflatedWidget {
       : fixedHeight && !(isParentHorFlex && hasFlexRatio)
       ? getFixedHeight()
       : totalTextHeight + getRelChildrenHeightTotal() + paddingVer;
-    console.log({ id: this.id, width, height });
+    // console.log({ id: this.id, width, height });
 
     this._globalSize = {
       innerWidth: width - paddingHor,
@@ -519,7 +519,7 @@ export class InflatedWidget {
       return parsePx(innerHeight, length);
     };
     if (this.id === "w3") {
-      console.log({ inRight, canvasWidth });
+      // console.log({ inRight, canvasWidth });
     }
     const parentLeft = pc.x + ps.padding.left;
     const parentTop = pc.y + ps.padding.top + topSibilingsHeight;
@@ -637,6 +637,18 @@ export default class VDOM {
     return VDOM.canvas.getContext("2d") as CanvasRenderingContext2D;
   }
 
+  get widgetTree(): string {
+    const widgets = [];
+    Tree.iterate(
+      this._inflatedRoot,
+      (w) => {
+        widgets.push(w.id);
+      },
+      "BFS"
+    );
+    return widgets.join(", ");
+  }
+
   constructor(canvas: HTMLCanvasElement) {
     VDOM.canvas = canvas;
     VDOM.canvasObserver = new CanvasObserver(canvas);
@@ -681,5 +693,21 @@ export default class VDOM {
   }
   findAll(predicate: (w: InflatedWidget) => boolean) {
     return Tree.findAll(this._inflatedRoot, predicate);
+  }
+
+  // returns in z-index, then addOrder
+  get widgets() {
+    const widgets = [];
+    Tree.iterate(this._inflatedRoot, (w) => {
+      widgets.push(w);
+    });
+    // sort in style.zIndex, then style.addOrder
+    widgets.sort((l, r) => {
+      if (l.style.zIndex === r.style.zIndex) {
+        return l._widget.addOrder - r._widget.addOrder;
+      }
+      return l.style.zIndex - r.style.zIndex;
+    });
+    return widgets;
   }
 }
