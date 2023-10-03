@@ -125,10 +125,8 @@ class MHPCanvas extends BasicCanvas {
   onPointerMove(e: MouseEvent) {
     super.onPointerMove(e);
 
-    this.vdom.find("w1").style.size.left = this.mouseMoveX + "px";
-    this.vdom.find("w1").style.size.top = this.mouseMoveY + "px";
     // this.vdom.update("w1");
-    this.redraw();
+    // this.redraw();
 
     // const prev = this.pointerMoveOn;
     // this.pointerMoveOn = wmgr.of(this.mouseMoveX, this.mouseMoveY) ?? null;
@@ -138,15 +136,15 @@ class MHPCanvas extends BasicCanvas {
     // }
 
     // //find in reverse order
-    // if (this.isDragging) {
-    //   // console.log("drag");
-    //   this.handleDrag();
-    // } else {
-    //   // console.log("not drag");
-    //   this.canvas.style.cursor =
-    //     this.pointerMoveOn?.style?.hover?.cursor ?? "default";
-    //   // this.redraw();
-    // }
+    if (this.isDragging) {
+      // console.log("drag");
+      this.handleDrag();
+    } else {
+      // console.log("not drag");
+      this.canvas.style.cursor =
+        this.pointerMoveOn?.style?.hover?.cursor ?? "default";
+      // this.redraw();
+    }
   }
   // input event overrides
 
@@ -257,9 +255,9 @@ class MHPCanvas extends BasicCanvas {
   }
 
   handleDrag() {
-    if (!this.isDragging || this.pointerDownOn === null) {
-      return;
-    }
+    // if (!this.isDragging || this.pointerDownOn === null) {
+    //   return;
+    // }
 
     const {
       mouseMoveX,
@@ -271,6 +269,9 @@ class MHPCanvas extends BasicCanvas {
       dx,
       dy,
     } = this;
+
+    this.vdom.find("w1").style.size.left = mouseMoveX + "px";
+    this.vdom.find("w1").style.size.top = mouseMoveY + "px";
 
     // if (this.pointerDownOn.style?.grabbable) {
     //   this.pointerDownOn.move(dx, dy);
