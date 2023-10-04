@@ -16,7 +16,8 @@ export function initWidgets() {
     style: {
       position: "global",
       size: {
-        left: "100px",
+        width: "280px",
+        left: "10%",
         top: "100px",
         // width: "300px",
         // height: "300px",
@@ -62,14 +63,14 @@ export function initWidgets() {
   });
   const w3 = new Widget({
     parent: w1,
-    text: "w3",
+    text: "w3. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     id: "w3",
     style: {
       size: {
         right: "20px",
         bottom: "20px",
-        width: "100px",
-        height: "100px",
+        width: "250px",
+        height: "80px",
       },
       padding: "10px",
       color: "black",
@@ -121,13 +122,13 @@ export function initWidgets() {
   });
   new Widget({
     parent: w4,
-    text: "w6",
+    text: "w4. lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     id: "w6",
     style: {
       size: {
         right: "20px",
         bottom: "20px",
-        width: "100px",
+        width: "300px",
         height: "100px",
       },
       grabbable: true,
@@ -179,7 +180,7 @@ export function initWidgets() {
   new Widget({
     parent: rbButtons,
     id: "toggleRuler",
-    text: "Ruler [ON]",
+    text: "Ruler [OFF]",
     style: {
       size: {
         // width: 0.9,
@@ -200,7 +201,7 @@ export function initWidgets() {
   new Widget({
     parent: rbButtons,
     id: "toggleFPS",
-    text: "FPS [ON]",
+    text: "FPS [OFF]",
     style: {
       size: {
         // width: 0.9,

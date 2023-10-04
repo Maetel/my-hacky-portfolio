@@ -408,11 +408,11 @@ class MHPCanvas extends BasicCanvas {
     }
   }
 
-  ruler = true;
+  ruler = false;
   toggleRuler() {
     this.ruler = !this.ruler;
   }
-  fps = true;
+  fps = false;
   toggleFPS() {
     this.fps = !this.fps;
   }
@@ -487,10 +487,13 @@ class MHPCanvas extends BasicCanvas {
     };
 
     this.ctx.save();
+    const plusminus = (range = 30) => range * (Math.random() - 0.5);
     for (let i = 0; i < noiseCount; ++i) {
       const { x, y, w, h } = getRandomXY();
       const { r, g, b, a } = getPixelData(x, y);
-      this.ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+      this.ctx.fillStyle = `rgba(${r + plusminus()},${g + plusminus()},${
+        b + plusminus()
+      },${a})`;
       this.ctx.fillRect(
         x - w * (Math.random() - 0.5),
         y - h * (Math.random() - 0.5),
@@ -585,7 +588,7 @@ class MHPCanvas extends BasicCanvas {
       // this.clearBase();this.drawNoise();
     } else {
       // this.drawNoise();
-      this.showIdle();
+      // this.showIdle();
     }
     this.drawNoise();
 
