@@ -475,9 +475,9 @@ class MHPCanvas extends BasicCanvas {
       };
     };
 
-    const noiseCount = 20;
-    const maxX = 120;
-    const maxY = 29;
+    const noiseCount = 10;
+    const maxX = 220;
+    const maxY = 19;
     const getRandomXY = () => {
       const x = Math.round(Math.random() * width);
       const y = Math.round(Math.random() * height);
@@ -491,7 +491,12 @@ class MHPCanvas extends BasicCanvas {
       const { x, y, w, h } = getRandomXY();
       const { r, g, b, a } = getPixelData(x, y);
       this.ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-      this.ctx.fillRect(x, y, w, h);
+      this.ctx.fillRect(
+        x - w * (Math.random() - 0.5),
+        y - h * (Math.random() - 0.5),
+        w,
+        h
+      );
     }
     this.ctx.restore();
     this._drawNoise = false;
