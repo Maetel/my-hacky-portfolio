@@ -290,7 +290,7 @@ class RootWidget {
       },
       verAlign: "top",
       horAlign: "left",
-      backgroundColor: "#b0b0b0",
+      backgroundColor: "#d0dff0",
       visible: true,
       zIndex: 0,
       cursor: "default",

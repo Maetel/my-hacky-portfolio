@@ -139,16 +139,31 @@ export function initWidgets() {
       // flex: 1,
     },
   });
-  new Widget({
-    id: "toggleNoise",
-    text: "Noise [ON]",
+
+  const rbButtons = new Widget({
+    id: "buttons",
     style: {
       size: {
         right: 0,
         bottom: 0,
+        width: "110px",
         // width: "200px",
       },
       position: "global",
+      padding: "10px",
+      backgroundColor: "lime",
+    },
+  });
+
+  new Widget({
+    id: "toggleNoise",
+    text: "Noise [ON]",
+    parent: rbButtons,
+    style: {
+      size: {
+        // width: 0.9,
+      },
+      // position: "absolute",
       padding: "10px",
       backgroundColor: "#46ff83",
       hover: {
@@ -161,11 +176,59 @@ export function initWidgets() {
       },
     },
   });
+  new Widget({
+    parent: rbButtons,
+    id: "toggleRuler",
+    text: "Ruler [ON]",
+    style: {
+      size: {
+        // width: 0.9,
+      },
+      // position: "absolute",
+      padding: "10px",
+      backgroundColor: "#ff8346",
+      hover: {
+        cursor: "pointer",
+        backgroundColor: "#aa8346",
+      },
+      pointerDown: {
+        cursor: "pointer",
+        backgroundColor: "#880230",
+      },
+    },
+  });
+  new Widget({
+    parent: rbButtons,
+    id: "toggleFPS",
+    text: "FPS [ON]",
+    style: {
+      size: {
+        // width: 0.9,
+      },
+      // position: "absolute",
+      padding: "10px",
+      backgroundColor: "#8346ff",
+      hover: {
+        cursor: "pointer",
+        backgroundColor: "#8346aa",
+      },
+      pointerDown: {
+        cursor: "pointer",
+        backgroundColor: "#023088",
+      },
+    },
+  });
+  new Widget({
+    parent: rbButtons,
+    id: "widgetList",
+    text: "",
+    style: {},
+  });
 }
 export function _initWidgets() {
   // console.log("called");
   // const background = new StatelessWidget("background", null, {
-  //   size: {
+  //   size: {i
   //     top: 0,
   //     left: 0,
   //     width: 1,

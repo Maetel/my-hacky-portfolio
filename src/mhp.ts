@@ -28,7 +28,6 @@ import StatefulWidget, {
 } from "./components/StatefulWidget";
 import error from "./class/IError";
 import Store, { STORE_RERENDER } from "./class/Store";
-import TreeTest, { createRoot } from "@/class/TreeTest";
 import VDOM from "./class/VirtualDOM";
 import Tree, { TreeSearchType } from "./class/Tree";
 import { RenderableWidget } from "./class/RenderableWidget";
@@ -74,7 +73,7 @@ type RulerOption = {
 };
 const DefaultRulerOption: RulerOption = {
   gridInterval: 20,
-  lineColor: "#ddd",
+  lineColor: "#a0afbc",
   highlightInterval: 5,
   highlightColor: "#888",
 } as const;
@@ -110,17 +109,37 @@ class MHPCanvas extends BasicCanvas {
   prepareWidgets() {
     const prepareToggleNoise = () => {
       const tn = "toggleNoise";
-      this.vdom.addCallbacks("toggleNoise", {
+      this.vdom.addCallbacks(tn, {
         onClick: (w) => {
           this.toggleNoise();
-          const bgColor = this.turnOnNoise ? "#000" : "#fff";
-          w.inflatedStyle.backgroundColor = bgColor;
           w._widget.text = `Noise [${this.turnOnNoise ? "ON" : "OFF"}]`;
           this.redraw();
         },
       });
     };
+    const prepareToggleRuler = () => {
+      const tr = "toggleRuler";
+      this.vdom.addCallbacks(tr, {
+        onClick: (w) => {
+          this.toggleRuler();
+          w._widget.text = `Ruler [${this.ruler ? "ON" : "OFF"}]`;
+          this.redraw();
+        },
+      });
+    };
+    const prepareToggleFPS = () => {
+      const tf = "toggleFPS";
+      this.vdom.addCallbacks(tf, {
+        onClick: (w) => {
+          this.toggleFPS();
+          w._widget.text = `FPS [${this.fps ? "ON" : "OFF"}]`;
+          this.redraw();
+        },
+      });
+    };
     prepareToggleNoise();
+    prepareToggleRuler();
+    prepareToggleFPS();
   }
   toggleNoise() {
     this.turnOnNoise = !this.turnOnNoise;
@@ -390,9 +409,12 @@ class MHPCanvas extends BasicCanvas {
   }
 
   ruler = true;
-
   toggleRuler() {
     this.ruler = !this.ruler;
+  }
+  fps = true;
+  toggleFPS() {
+    this.fps = !this.fps;
   }
 
   render() {
@@ -477,6 +499,10 @@ class MHPCanvas extends BasicCanvas {
 
   drawRuler(rulerOption: RulerOption = DefaultRulerOption) {
     // Define the grid parameters
+    if (!this.ruler) {
+      return;
+    }
+
     this.ctx.save();
     const { gridInterval, lineColor, highlightInterval, highlightColor } =
       rulerOption;
@@ -560,7 +586,7 @@ class MHPCanvas extends BasicCanvas {
 
     if (true) {
       this.renderFPS();
-      this.showWidgets();
+      // this.showWidgets();
     }
 
     //!content
@@ -581,6 +607,9 @@ class MHPCanvas extends BasicCanvas {
   }
 
   renderFPS() {
+    if (!this.fps) {
+      return;
+    }
     const fps = myround(1000 / this.dt, 0);
     const prev = {
       fillStyle: this.ctx.fillStyle,

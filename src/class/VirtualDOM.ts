@@ -142,11 +142,7 @@ export default class VDOM {
       ...(exists ? exists : {}),
       ...callbacks,
     };
-    console.log({ appended });
     this._callbacks.set(widgetFound.id, appended);
-
-    const getter = this.onClickOf(widgetOrId);
-    console.log({ getter });
   }
 
   of(widgetOrId: string | RenderableWidget | null): RenderableWidget | null {
