@@ -102,8 +102,28 @@ class MHPCanvas extends BasicCanvas {
     this.vdom = new VDOM(this.canvas);
     // this.speakVDOM("Canvas create : ");
 
+    this.prepareWidgets();
+
     if (isMobile) {
     }
+  }
+  prepareWidgets() {
+    const prepareToggleNoise = () => {
+      const tn = "toggleNoise";
+      this.vdom.addCallbacks("toggleNoise", {
+        onClick: (w) => {
+          this.toggleNoise();
+          const bgColor = this.turnOnNoise ? "#000" : "#fff";
+          w.inflatedStyle.backgroundColor = bgColor;
+          w._widget.text = `Noise [${this.turnOnNoise ? "ON" : "OFF"}]`;
+          this.redraw();
+        },
+      });
+    };
+    prepareToggleNoise();
+  }
+  toggleNoise() {
+    this.turnOnNoise = !this.turnOnNoise;
   }
 
   // @override
@@ -171,8 +191,9 @@ class MHPCanvas extends BasicCanvas {
   // @override
   onPointerUp(e: MouseEvent) {
     super.onPointerUp(e);
-    // const pointerUpOn = wmgr.of(this.mouseUpX, this.mouseUpY) ?? null;
-    // this.handlePointerUp(pointerUpOn);
+    const pointerUpOn =
+      this.vdom.mouseOn(this.mouseDownX, this.mouseDownY) ?? null;
+    this.handlePointerUp(pointerUpOn);
     this.pointerDownOn = null;
     this.pointerMoveOn = null; // mobile
     // this.redraw();
@@ -196,8 +217,10 @@ class MHPCanvas extends BasicCanvas {
   ////////////////////////////////////////////////////////
   // handle events
 
-  handleClick(widget: Widget) {
-    this.pointerDownOn?._widget.onClick?.(widget);
+  handleClick(widget: RenderableWidget) {
+    this.vdom.onClickOf(widget)?.(widget);
+    // console.log({ widget, onclick: widget?._callbacks?.onClick });
+    // widget?._callbacks?.onClick?.(widget);
   }
 
   direction = 1;
@@ -252,8 +275,8 @@ class MHPCanvas extends BasicCanvas {
     return animId ?? anim.id;
   }
 
-  handlePointerUp(widget: Widget) {
-    // console.log({ d: this.pointerDownOn?.id, u: widget?.id });
+  handlePointerUp(widget: RenderableWidget) {
+    console.log({ d: this.pointerDownOn?.id, u: widget?.id });
     if (this.pointerDownOn?.id === widget?.id) {
       this.handleClick(widget);
     }
@@ -405,9 +428,10 @@ class MHPCanvas extends BasicCanvas {
     this.redraw();
   }
 
+  turnOnNoise = true;
   _drawNoise = false;
   drawNoise(force = false) {
-    if (force && !this._drawNoise) {
+    if (!this.turnOnNoise || (force && !this._drawNoise)) {
       return;
     }
     const { width, height } = this;

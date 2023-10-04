@@ -9,7 +9,7 @@ import {
   parseIfPixel,
   parsePx,
 } from "@/utils";
-import VirtualWidget, { getRootWidget } from "../components/Widget";
+import Widget, { getRootWidget } from "../components/Widget";
 import WidgetStyle, { DefaultStyle } from "../components/WidgetStyle";
 import Tree from "@/class/Tree";
 import error from "@/class/IError";
@@ -24,8 +24,14 @@ import {
 import CanvasObserver from "./WindowObserver";
 import { RenderableWidget } from "./RenderableWidget";
 
+type WidgetCallback = (widget: RenderableWidget) => any;
+interface WidgetCallbacks {
+  onClick?: WidgetCallback;
+  onDestroy?: WidgetCallback;
+}
+
 export default class VDOM {
-  _root: VirtualWidget = getRootWidget();
+  _root: Widget = getRootWidget();
   _renderableRoot: RenderableWidget;
   isInflated = false;
   static canvas: HTMLCanvasElement;
@@ -98,8 +104,85 @@ export default class VDOM {
     Tree.iterate(this._renderableRoot, (w) => w.inflate(), "DFS_ParentFirst");
     // this.inputStyle.this.isInflated = true;
   }
+
+  _callbacks: Map<string, WidgetCallbacks> = new Map();
+  setCallbacks(
+    widgetOrId: string | RenderableWidget | null,
+    callbacks: WidgetCallbacks
+  ) {
+    if (!widgetOrId) {
+      return;
+    }
+    const widgetFound =
+      typeof widgetOrId === "string"
+        ? Tree.find(this._renderableRoot, (w) => w.id === widgetOrId)
+        : widgetOrId;
+    if (!widgetFound) {
+      return;
+    }
+    this._callbacks.set(widgetFound.id, callbacks);
+  }
+
+  addCallbacks(
+    widgetOrId: string | RenderableWidget | null,
+    callbacks: WidgetCallbacks
+  ) {
+    if (!widgetOrId) {
+      return;
+    }
+    const widgetFound =
+      typeof widgetOrId === "string"
+        ? Tree.find(this._renderableRoot, (w) => w.id === widgetOrId)
+        : widgetOrId;
+    if (!widgetFound) {
+      return;
+    }
+    const exists = this._callbacks.get(widgetFound.id);
+    const appended = {
+      ...(exists ? exists : {}),
+      ...callbacks,
+    };
+    console.log({ appended });
+    this._callbacks.set(widgetFound.id, appended);
+
+    const getter = this.onClickOf(widgetOrId);
+    console.log({ getter });
+  }
+
+  of(widgetOrId: string | RenderableWidget | null): RenderableWidget | null {
+    if (!widgetOrId) {
+      return null;
+    }
+    return typeof widgetOrId === "string"
+      ? Tree.find(this._renderableRoot, (w) => w.id === widgetOrId)
+      : widgetOrId;
+  }
+
+  getCallbacks(
+    widgetOrId: string | RenderableWidget | null
+  ): WidgetCallbacks | null {
+    // const found = this.of(widgetOrId);
+    // if (!found) {
+    //   return null;
+    // }
+    console.log({
+      of: this.of(widgetOrId),
+      thisCallbacks: this._callbacks,
+      getOfCallbacks: this._callbacks.get(this.of(widgetOrId).id),
+    });
+    return this._callbacks.get(this.of(widgetOrId).id);
+  }
+
+  onClickOf(widgetOrId: string | RenderableWidget): WidgetCallback {
+    return this.getCallbacks(widgetOrId)?.onClick;
+  }
+
+  onDestroyOf(widgetOrId: string | RenderableWidget): WidgetCallback {
+    return this.getCallbacks(widgetOrId)?.onDestroy;
+  }
+
   prepareRender() {
-    //update inflated root
+    // TODO : change to Tree diffing instead of re-creation
     this._renderableRoot = new RenderableWidget(this._root, VDOM.ctx);
     this.inflate();
     Tree.iterate(

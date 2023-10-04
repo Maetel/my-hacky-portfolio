@@ -9,7 +9,7 @@ import {
   parseIfPixel,
   parsePx,
 } from "@/utils";
-import VirtualWidget, { getRootWidget } from "../components/Widget";
+import Widget, { getRootWidget } from "../components/Widget";
 import WidgetStyle, { DefaultStyle } from "../components/WidgetStyle";
 import Tree from "@/class/Tree";
 import error from "@/class/IError";
@@ -147,13 +147,14 @@ const helpers = {
 export class RenderableWidget {
   parent: RenderableWidget | null;
   children: RenderableWidget[];
-  _widget: VirtualWidget;
+  _widget: Widget;
   inflatedStyle: WidgetStyle;
   id: string;
   isInflated: boolean = false;
   _globalCoord: RenderableCoord = null;
   _globalSize: RenderableSize = null;
   ctx: CanvasRenderingContext2D = null;
+  _callbacks = null;
   resetCoord() {
     this._globalCoord = null;
   }
@@ -167,7 +168,7 @@ export class RenderableWidget {
    *
    */
   constructor(
-    widget: VirtualWidget,
+    widget: Widget,
     ctx: CanvasRenderingContext2D,
     parent: RenderableWidget | null = null
   ) {
@@ -191,6 +192,11 @@ export class RenderableWidget {
 
   get style() {
     return this.inflatedStyle;
+  }
+
+  reInflate() {
+    this.isInflated = false;
+    this.inflate();
   }
 
   inflate() {
@@ -223,6 +229,7 @@ export class RenderableWidget {
         style[key] = usableValue;
       }
     });
+    this._callbacks = this._widget.callbacks;
     this.isInflated = true;
   }
 

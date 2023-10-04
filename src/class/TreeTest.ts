@@ -1,6 +1,6 @@
 import WidgetStyle, { DefaultStyle } from "@/components/WidgetStyle";
 import WidgetManager from "@/components/WidgetManager";
-import VirtualWidget, { getRootWidget } from "@/components/Widget";
+import Widget, { getRootWidget } from "@/components/Widget";
 import Tree from "./Tree";
 import VDOM from "@/class/VirtualDOM";
 const wmgr = WidgetManager;
@@ -90,7 +90,7 @@ export const createRoot = () => {
 
 export default function testTree() {
   const root = createRoot();
-  const speaker = (w: VirtualWidget, nth) => {
+  const speaker = (w: Widget, nth) => {
     console.log(`[${nth}]`, w.id);
   };
   // console.log("================== 1. BFS ==================");

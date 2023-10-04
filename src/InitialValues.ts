@@ -1,6 +1,6 @@
 import Store from "./class/Store";
 import StatefulWidget from "./components/StatefulWidget";
-import VirtualWidget from "./components/Widget";
+import Widget from "./components/Widget";
 import WidgetManager, {
   widgetIds,
   widgets,
@@ -10,7 +10,7 @@ import WidgetStyle from "./components/WidgetStyle";
 
 export function initWidgets() {
   console.log("initWidgets");
-  const w1 = new VirtualWidget({
+  const w1 = new Widget({
     text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w1",
     style: {
@@ -42,7 +42,7 @@ export function initWidgets() {
     },
   });
   console.log({ w1 });
-  const w2 = new VirtualWidget({
+  const w2 = new Widget({
     parent: w1,
     text: "w2",
     id: "w2",
@@ -60,7 +60,7 @@ export function initWidgets() {
       backgroundColor: "blue",
     },
   });
-  const w3 = new VirtualWidget({
+  const w3 = new Widget({
     parent: w1,
     text: "w3",
     id: "w3",
@@ -79,7 +79,7 @@ export function initWidgets() {
     },
   });
 
-  const w4 = new VirtualWidget({
+  const w4 = new Widget({
     // text: "a b c d e f g h i j k l m n o p q r s t u v w x y z",
     id: "w4",
     style: {
@@ -100,7 +100,7 @@ export function initWidgets() {
     },
   });
   console.log({ w1 });
-  new VirtualWidget({
+  new Widget({
     parent: w4,
     text: "w5",
     id: "w5",
@@ -119,7 +119,7 @@ export function initWidgets() {
       // flex: 1,
     },
   });
-  new VirtualWidget({
+  new Widget({
     parent: w4,
     text: "w6",
     id: "w6",
@@ -137,6 +137,28 @@ export function initWidgets() {
       // borderRadius: 20,
       backgroundColor: "green",
       // flex: 1,
+    },
+  });
+  new Widget({
+    id: "toggleNoise",
+    text: "Noise [ON]",
+    style: {
+      size: {
+        right: 0,
+        bottom: 0,
+        // width: "200px",
+      },
+      position: "global",
+      padding: "10px",
+      backgroundColor: "#46ff83",
+      hover: {
+        cursor: "pointer",
+        backgroundColor: "#46aa83",
+      },
+      pointerDown: {
+        cursor: "pointer",
+        backgroundColor: "#308802",
+      },
     },
   });
 }
@@ -215,7 +237,7 @@ export function _initWidgets() {
     opacity: 0.5,
     // position: "relative",
   };
-  const first = new VirtualWidget({
+  const first = new Widget({
     style: firstStyle,
   });
   first.addChild(
@@ -240,7 +262,7 @@ export function _initWidgets() {
     })
   );
   first.addChild(
-    new VirtualWidget({
+    new Widget({
       text: "This is my text",
       style: thirdStyle,
     })

@@ -7,37 +7,34 @@ import Store from "@/class/Store";
 import { parsePx } from "@/utils";
 import * as C from "@/constants";
 
-export type WidgetCallback = (stls: VirtualWidget) => any;
-export type OnDestoryWithoutCleanup = WidgetCallback;
-export type OnDestoryWithCleanup = (
-  stls: VirtualWidget,
-  cleanUp: () => any
-) => any;
-export type OnCreate = WidgetCallback;
+export type _WidgetCallback = (widget: Widget) => any;
+export type OnDestoryWithoutCleanup = _WidgetCallback;
+export type OnDestoryWithCleanup = (widget: Widget, cleanUp: () => any) => any;
+export type OnCreate = _WidgetCallback;
 export interface WidgetOption {
-  parent?: VirtualWidget;
+  parent?: Widget;
   style?: WidgetStyle;
   id?: string;
-  copiedFrom?: VirtualWidget;
+  copiedFrom?: Widget;
   callbacks?: WidgetCallbacks;
   text?: string;
 }
 
 export type WidgetCallbacks = {
-  onClick?: WidgetCallback;
-  onBeforeCreate?: WidgetCallback;
-  onAfterCreate?: WidgetCallback;
-  onDestroy?: WidgetCallback;
+  onClick?: _WidgetCallback;
+  onBeforeCreate?: _WidgetCallback;
+  onAfterCreate?: _WidgetCallback;
+  onDestroy?: _WidgetCallback;
   onDestroyWithCleanup?: OnDestoryWithCleanup;
 };
 
-export default class VirtualWidget extends Area {
+export default class Widget extends Area {
   addOrder: number;
   _speak: string[] = [];
-  copiedFrom?: VirtualWidget;
+  copiedFrom?: Widget;
   id: string;
-  parent: VirtualWidget | null = null;
-  children: VirtualWidget[] = [];
+  parent: Widget | null = null;
+  children: Widget[] = [];
   _style: WidgetStyle;
   timerJob?: TimerJob;
   inputOption?: WidgetOption;
@@ -88,7 +85,7 @@ export default class VirtualWidget extends Area {
     // console.log({ pcl: parent?.children.length, ao: this.addOrder });
     this.id =
       id ??
-      `${parent?.id ?? "stls"}-${parent?.children.length ?? this.addOrder}`;
+      `${parent?.id ?? "widget"}-${parent?.children.length ?? this.addOrder}`;
     this.copiedFrom = copiedFrom;
     this._style = { ...style };
     parent?.addChild(this);
@@ -107,11 +104,7 @@ export default class VirtualWidget extends Area {
       children: [...this.children],
     };
   }
-  animate(
-    ms: number,
-    start: (w: VirtualWidget) => any,
-    cleanup?: (w: VirtualWidget) => any
-  ) {
+  animate(ms: number, start: (w: Widget) => any, cleanup?: (w: Widget) => any) {
     if (cleanup) {
       this.timerJob = new TimerJob();
       this.timerJob.timeout(ms, () => {
@@ -149,8 +142,8 @@ export default class VirtualWidget extends Area {
   }
 
   //@override
-  copied(id?: string): VirtualWidget {
-    const retval = new VirtualWidget({
+  copied(id?: string): Widget {
+    const retval = new Widget({
       ...this.buildOption(),
       id: id ?? `${this.id}-copy`,
       copiedFrom: this,
@@ -158,7 +151,7 @@ export default class VirtualWidget extends Area {
     return retval;
   }
 
-  addChild(child: VirtualWidget) {
+  addChild(child: Widget) {
     child.parent = this;
     if (!this.children.includes(child)) {
       this.children.push(child);
@@ -168,12 +161,12 @@ export default class VirtualWidget extends Area {
     return this;
   }
 
-  addChildren(...children: VirtualWidget[]) {
+  addChildren(...children: Widget[]) {
     children.forEach(this.addChild.bind(this));
     return this;
   }
 
-  async deleteChild(child: VirtualWidget) {
+  async deleteChild(child: Widget) {
     if (!this.children.some((c) => c.id === child.id)) {
       error("Cannot find child : ", { child });
     }
@@ -214,6 +207,10 @@ export default class VirtualWidget extends Area {
     });
   }
 
+  get callbacks() {
+    return this._callbacks;
+  }
+
   set callbacks(callbacks: WidgetCallbacks) {
     this._callbacks = callbacks;
   }
@@ -222,7 +219,7 @@ export default class VirtualWidget extends Area {
     this._callbacks = { ...this._callbacks, ...callbacks };
   }
 
-  set onClick(callback: WidgetCallback) {
+  set onClick(callback: _WidgetCallback) {
     this._callbacks.onClick = callback;
   }
 
@@ -230,7 +227,7 @@ export default class VirtualWidget extends Area {
     return this._callbacks.onClick;
   }
 
-  set onBeforeCreate(callback: WidgetCallback) {
+  set onBeforeCreate(callback: _WidgetCallback) {
     this._callbacks.onBeforeCreate = callback;
   }
 
@@ -238,7 +235,7 @@ export default class VirtualWidget extends Area {
     return this._callbacks.onBeforeCreate;
   }
 
-  set onAfterCreate(callback: WidgetCallback) {
+  set onAfterCreate(callback: _WidgetCallback) {
     this._callbacks.onAfterCreate = callback;
   }
 
@@ -246,7 +243,7 @@ export default class VirtualWidget extends Area {
     return this._callbacks.onAfterCreate;
   }
 
-  set onDestroy(callback: WidgetCallback) {
+  set onDestroy(callback: _WidgetCallback) {
     this._callbacks.onDestroy = callback;
   }
 
@@ -262,12 +259,12 @@ export default class VirtualWidget extends Area {
     return this._callbacks.onDestroyWithCleanup;
   }
 
-  as<T extends VirtualWidget>() {
+  as<T extends Widget>() {
     return this as unknown as T;
   }
 
   // returns parent if found
-  get parents(): VirtualWidget[] | null {
+  get parents(): Widget[] | null {
     let retval = [];
     let parent = this.parent;
     while (parent) {
@@ -276,13 +273,13 @@ export default class VirtualWidget extends Area {
     }
     return retval.length > 0 ? retval : null;
   }
-  childOf(id: string): VirtualWidget | null {
+  childOf(id: string): Widget | null {
     return this.parents?.find((p) => p.id === id);
   }
 }
 
 class RootWidget {
-  static theRoot = new VirtualWidget({
+  static theRoot = new Widget({
     style: {
       ...DefaultStyle,
       size: {
