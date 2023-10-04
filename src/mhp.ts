@@ -302,7 +302,12 @@ class MHPCanvas extends BasicCanvas {
   }
 
   updateScreen(force?: boolean) {
-    if (this._redraw || this.animations.length > 0 || this._forceRedraw) {
+    if (
+      this._drawNoise ||
+      this._redraw ||
+      this.animations.length > 0 ||
+      this._forceRedraw
+    ) {
       this._redraw = false;
       return true;
     }
@@ -400,6 +405,52 @@ class MHPCanvas extends BasicCanvas {
     this.redraw();
   }
 
+  _drawNoise = false;
+  drawNoise(force = false) {
+    if (force && !this._drawNoise) {
+      return;
+    }
+    const { width, height } = this;
+    const imageData = this.ctx.getImageData(0, 0, width, height);
+    const getPixelData = (x: number, y: number) => {
+      const index = (y * width + x) * 4; // Each pixel has 4 values (RGBA)
+
+      // Extract individual color values
+      const r = imageData.data[index];
+      const g = imageData.data[index + 1];
+      const b = imageData.data[index + 2];
+      const a = imageData.data[index + 3];
+
+      return {
+        r,
+        g,
+        b,
+        a,
+      };
+    };
+
+    const noiseCount = 20;
+    const maxX = 120;
+    const maxY = 29;
+    const getRandomXY = () => {
+      const x = Math.round(Math.random() * width);
+      const y = Math.round(Math.random() * height);
+      const w = Math.round(Math.random() * maxX);
+      const h = Math.round(Math.random() * maxY);
+      return { x, y, w, h };
+    };
+
+    this.ctx.save();
+    for (let i = 0; i < noiseCount; ++i) {
+      const { x, y, w, h } = getRandomXY();
+      const { r, g, b, a } = getPixelData(x, y);
+      this.ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+      this.ctx.fillRect(x, y, w, h);
+    }
+    this.ctx.restore();
+    this._drawNoise = false;
+  }
+
   drawRuler(rulerOption: RulerOption = DefaultRulerOption) {
     // Define the grid parameters
     this.ctx.save();
@@ -445,6 +496,14 @@ class MHPCanvas extends BasicCanvas {
     this.drawRuler(rulerOptions);
   }
 
+  accFrame = 0;
+  updateNoiseFrame() {
+    this.accFrame += 1;
+    if (this.accFrame % 10 === 0) {
+      this._drawNoise = true;
+    }
+  }
+
   // @override
   _run(timestamp: number) {
     // try {
@@ -458,14 +517,22 @@ class MHPCanvas extends BasicCanvas {
     this.handleTimerJobs();
     this.handleAnimation();
 
+    if (this._drawNoise) {
+      this.clearBase();
+    }
+
     if (this.updateScreen()) {
       const { x, y, w, h } = this.findUpdateArea();
       // this.ctx.clearRect(x, y, w, h);
+
       this.render();
-      // this.clearBase();
+      this.drawNoise(true);
+      // this.clearBase();this.drawNoise();
     } else {
+      // this.drawNoise();
       this.showIdle();
     }
+    this.drawNoise();
 
     if (true) {
       this.renderFPS();
@@ -474,6 +541,7 @@ class MHPCanvas extends BasicCanvas {
 
     //!content
 
+    this.updateNoiseFrame();
     this.currentAnimation = requestAnimationFrame(this._run.bind(this));
     // } catch (e) {
     //   console.log(e);
